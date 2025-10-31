@@ -61,4 +61,10 @@ pylint ledger
 说明
 - 本 CLI 版本用于满足实验三“实现功能与代码规模”的要求。若后续需要 GUI，可在此基础上扩展前端界面层。
 
+运行图形界面（可选）
+- 依赖使用标准库 Tkinter（Windows 自带），无需额外安装。
+```bash
+python -m ledger.app_gui
+```
+
 
