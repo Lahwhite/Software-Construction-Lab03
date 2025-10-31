@@ -1,0 +1,49 @@
+@startuml 剖面图
+' 定义构造型（Stereotype），使用PlantUML支持的格式
+class "核心模块" as CoreModule <<stereotype>> {
+  描述: 系统核心业务模块，包含收支记录、预算管理等
+}
+
+class "存储模块" as StorageModule <<stereotype>> {
+  描述: 负责数据持久化，包括本地存储和云端存储
+}
+
+class "交互模块" as InteractionModule <<stereotype>> {
+  描述: 负责用户界面交互，如UI渲染、弹窗提示
+}
+
+class "服务模块" as ServiceModule <<stereotype>> {
+  描述: 提供业务服务，如统计计算、离线管理
+}
+
+class "离线支持" as OfflineCapable <<stereotype>> {
+  描述: 标记支持离线操作的模块
+}
+
+' 定义扩展关系（构造型之间的继承/包含）
+CoreModule -|> "业务核心"
+StorageModule -|> "数据层"
+InteractionModule -|> "表现层"
+ServiceModule -|> "业务服务"
+OfflineCapable -|> "功能特性"
+
+' 系统模块及其构造型应用
+package "记账本系统模块" {
+  class 收支记录组件 <<CoreModule>>
+  class 预算管理组件 <<CoreModule>>
+  class 本地存储组件 <<StorageModule>> <<OfflineCapable>>
+  class 云端存储组件 <<StorageModule>>
+  class UI渲染组件 <<InteractionModule>>
+  class 统计服务组件 <<ServiceModule>>
+  class 离线服务组件 <<ServiceModule>> <<OfflineCapable>>
+}
+
+' 标注模块数据流向（使用注释补充）
+note right of 收支记录组件: 数据流向：双向（输入+输出）
+note right of 预算管理组件: 数据流向：双向（输入+输出）
+note right of 本地存储组件: 数据流向：双向（输入+输出）
+note right of 云端存储组件: 数据流向：双向（输入+输出）
+note right of UI渲染组件: 数据流向：输出（仅展示数据）
+note right of 统计服务组件: 数据流向：输入（仅处理数据）
+note right of 离线服务组件: 数据流向：双向（输入+输出）
+@enduml

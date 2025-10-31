@@ -1,0 +1,47 @@
+@startuml 交互概览图
+' 交互概览图配置
+skinparam activity {
+  BackgroundColor #FFF8E1
+  BorderColor #666666
+  FontName 微软雅黑
+}
+
+start
+' fork开启并行分支（明确两个分支，即使第二个分支为空，确保结构完整）
+fork
+  ' 主分支：录入记录+预算计算
+  :用户在离线状态下录入支出记录;
+  :本地存储组件保存记录（isSynced=false）;
+  :预算管理组件计算预算进度;
+  if (进度≥预警阈值？) then (是)
+    :UI渲染组件弹出预警弹窗;
+  else (否)
+    :无预警;
+  endif
+fork again
+  ' 空分支：满足PlantUML对fork结构的要求（至少两个分支）
+  :等待主分支完成;
+end fork
+' join合并分支后连接下一步
+:检测到网络连接;
+:离线服务组件触发同步;
+:本地存储组件上传未同步记录;
+:云端存储组件比对记录ID与版本;
+:返回冲突记录列表（若有）;
+
+if (存在冲突记录？) then (是)
+  :UI渲染组件展示冲突选择弹窗;
+  if (用户选择"以本地为准"？) then (是)
+    :云端存储组件覆盖云端记录;
+  else (否)
+    :本地存储组件更新本地记录;
+  endif
+else (否)
+  :云端存储组件直接同步新记录;
+endif
+
+:同步完成，更新记录isSynced=true;
+:统计服务组件更新统计数据;
+:UI渲染组件刷新首页展示;
+stop
+@enduml

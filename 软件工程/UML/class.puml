@@ -1,0 +1,101 @@
+@startuml 记账本类图
+' 设定类图样式
+skinparam classAttributeIconSize 0
+skinparam classFontName 微软雅黑
+skinparam backgroundColor #F8F9FA
+skinparam arrowColor #666666
+
+' 用户类（关联QQ登录）
+class User {
+  - userId: String  // 唯一标识
+  - qqOpenId: String  // QQ第三方登录标识
+  - nickname: String  // 用户名
+  + loginByQQ(): Boolean  // QQ快捷登录
+  + getUserInfo(): UserInfo  // 获取用户信息
+}
+
+' 收支记录类
+class Record {
+  - recordId: String  // 记录唯一ID
+  - amount: Double  // 金额（保留2位小数）
+  - type: Enum{INCOME, EXPENSE}  // 收入/支出类型
+  - date: Date  // 交易日期
+  - paymentMethod: String  // 支付方式（固定预设）
+  - categoryId: String  // 关联的支出分类ID
+  - remark: String  // 备注（可选）
+  - isSynced: Boolean  // 是否已同步至云端
+  + save(): Boolean  // 保存记录
+  + update(): Boolean  // 修改记录
+  + delete(): Boolean  // 删除记录
+}
+
+' 支出分类类（支持自定义）
+class Category {
+  - categoryId: String  // 分类唯一ID
+  - name: String  // 分类名称（如"动漫周边"）
+  - userId: String  // 所属用户ID
+  + add(): Boolean  // 新增分类
+  + delete(): Boolean  // 删除分类（需检查关联记录）
+  + getList(): List<Category>  // 获取用户的分类列表
+}
+
+' 预算类
+class Budget {
+  - budgetId: String  // 预算唯一ID
+  - userId: String  // 所属用户ID
+  - cycle: String  // 周期（默认"YYYY-MM"）
+  - totalAmount: Double  // 总预算金额
+  - warningThreshold: Int = 80  // 预警阈值（默认80%）
+  - categoryBudgets: Map<String, Double>  // 分类预算（分类ID→金额）
+  + setBudget(total: Double, categoryMap: Map): Boolean  // 设置预算
+  + getProgress(categoryId: String): Double  // 获取某分类预算进度
+  + checkWarning(): Boolean  // 检查是否达到预警阈值
+}
+
+' 本地存储类
+class LocalStorage {
+  - dbPath: String  // 本地数据库路径
+  - maxRecordLimit: Int = 10000  // 离线存储上限
+  + saveRecord(record: Record): Boolean  // 保存记录到本地
+  + queryRecords(conditions: Map): List<Record>  // 按条件查询本地记录
+  + setStorageLimit(limit: Int): Boolean  // 设置存储上限
+}
+
+' 云端存储类
+class CloudStorage {
+  - serverUrl: String  // 云端服务器地址
+  + syncRecords(localRecords: List<Record>): SyncResult  // 同步本地记录到云端
+  + resolveConflict(conflicts: List<Record>): Boolean  // 处理同步冲突（弹窗让用户选择）
+  + login(qqOpenId: String): Boolean  // 基于QQ标识登录云端
+}
+
+' 统计服务类
+class StatisticsService {
+  + calculateByTime(start: Date, end: Date): TimeStats  // 按时间维度统计
+  + calculateByCategory(type: Enum): CategoryStats  // 按分类维度统计
+  + generateChartData(stats: Any): ChartData  // 生成图表所需数据（饼图/柱状图等）
+}
+
+' UI管理类（二次元风格）
+class UIManager {
+  - themeStyle: String = "二次元"  // 视觉风格
+  - dynamicCharacter: Character  // 动态二次元角色
+  + showDynamicCharacter(): Void  // 在首页展示角色待机动作
+  + updateProgressUI(budget: Budget): Void  // 更新预算进度条UI
+  + showWarningDialog(message: String): Void  // 展示预警弹窗
+}
+
+' 类间关系定义
+User "1" -- "*" Record: 拥有 >
+User "1" -- "*" Category: 自定义 >
+User "1" -- "*" Budget: 设置 >
+Record "*" -- "1" Category: 属于 >
+Record "1" -- "*" LocalStorage: 存储于 >
+Record "1" -- "*" CloudStorage: 同步至 >
+StatisticsService "1" -- "*" Record: 依赖数据 >
+Budget "1" -- "*" Record: 依赖数据计算进度 >
+UIManager "1" -- "1" Budget: 展示进度与预警 >
+UIManager "1" -- "1" StatisticsService: 展示统计图表 >
+CloudStorage "1" -- "1" User: 关联用户数据 >
+
+@enduml
