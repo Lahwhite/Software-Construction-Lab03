@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtualenv
+venv/
+.venv/
+env/
+
+# IDE/Editor
+.idea/
+.vscode/
+*.iml
+
+# OS
+Thumbs.db
+.DS_Store
+
+# SQLite database
+code/ledger/ledger.sqlite3
+
+# Logs
+*.log
+
+
