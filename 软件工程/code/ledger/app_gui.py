@@ -1,12 +1,26 @@
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+# 支持直接运行：添加父目录到路径，使能导入 ledger 包
+_code_dir = Path(__file__).parent.parent
+if str(_code_dir) not in sys.path:
+    sys.path.insert(0, str(_code_dir))
+
 import tkinter as tk
 from tkinter import messagebox, ttk
 from datetime import date
 from typing import Optional
 
-from .database import migrate
-from .services import BudgetService, CategoryService, RecordService
+try:
+    # 优先尝试相对导入（作为模块时）
+    from .database import migrate
+    from .services import BudgetService, CategoryService, RecordService
+except ImportError:
+    # 回退到绝对导入（直接运行时）
+    from ledger.database import migrate
+    from ledger.services import BudgetService, CategoryService, RecordService
 
 
 class LedgerApp(tk.Tk):
@@ -22,19 +36,23 @@ class LedgerApp(tk.Tk):
         self.category_service = CategoryService()
         self.budget_service = BudgetService()
 
+        # 添加多页签容器
         notebook = ttk.Notebook(self)
         notebook.pack(fill=tk.BOTH, expand=True)
 
+        # 注册各个页面
         self.page_add = ttk.Frame(notebook)
         self.page_list = ttk.Frame(notebook)
         self.page_budget = ttk.Frame(notebook)
         self.page_categories = ttk.Frame(notebook)
 
+        # 添加页面到标签页
         notebook.add(self.page_add, text="添加记录")
         notebook.add(self.page_list, text="记录列表")
         notebook.add(self.page_budget, text="预算进度")
         notebook.add(self.page_categories, text="分类管理")
 
+        # 构建各个页面内容
         self._build_add_page(self.page_add)
         self._build_list_page(self.page_list)
         self._build_budget_page(self.page_budget)
@@ -278,8 +296,7 @@ def main() -> None:
     app = LedgerApp()
     app.mainloop()
 
-
+# 允许直接运行
 if __name__ == "__main__":
     main()
-
 

@@ -7,7 +7,7 @@ from .models import Budget, BudgetProgress, Category, Record
 from .repositories import BudgetRepository, CategoryRepository, PaymentMethodRepository, RecordRepository
 from .utils import clamp
 
-
+# 分类服务
 class CategoryService:
     def __init__(self) -> None:
         self._categories = CategoryRepository()
@@ -21,7 +21,7 @@ class CategoryService:
     def list(self) -> List[Category]:
         return self._categories.list_all()
 
-
+# 记录服务
 class RecordService:
     def __init__(self) -> None:
         self._records = RecordRepository()
@@ -84,7 +84,7 @@ class RecordService:
     def list_recent(self, limit: int = 20) -> List[Record]:
         return self._records.list_recent(limit=limit)
 
-
+# 预算服务
 class BudgetService:
     def __init__(self) -> None:
         self._budgets = BudgetRepository()

@@ -3,7 +3,7 @@ import sqlite3
 from contextlib import contextmanager
 from typing import Iterator, Optional
 
-
+# 默认数据库路径
 DEFAULT_DB_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "ledger.sqlite3"
 )
@@ -23,6 +23,7 @@ def get_connection(db_path: Optional[str] = None) -> sqlite3.Connection:
     return connection
 
 
+# 数据库游标上下文管理器
 @contextmanager
 def db_cursor(db_path: Optional[str] = None) -> Iterator[sqlite3.Cursor]:
     conn = get_connection(db_path)

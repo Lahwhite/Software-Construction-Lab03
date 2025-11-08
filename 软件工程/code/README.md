@@ -63,8 +63,15 @@ pylint ledger
 
 运行图形界面（可选）
 - 依赖使用标准库 Tkinter（Windows 自带），无需额外安装。
+- 方式一（推荐）：作为模块运行
 ```bash
+cd code
 python -m ledger.app_gui
+```
+- 方式二：直接运行脚本
+```bash
+cd code
+python ledger/app_gui.py
 ```
 
 
