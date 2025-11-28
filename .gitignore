@@ -27,4 +27,4 @@ code/ledger/ledger.sqlite3
 # Logs
 *.log
 
-
+analysis_results/

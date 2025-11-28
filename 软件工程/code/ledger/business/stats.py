@@ -3,8 +3,8 @@ from __future__ import annotations
 from datetime import date
 from typing import Dict, List, Tuple
 
-from .models import StatsResult
-from .repositories import CategoryRepository, PaymentMethodRepository, RecordRepository
+from ledger.data.models import StatsResult
+from ledger.data.repositories import CategoryRepository, PaymentMethodRepository, RecordRepository
 
 
 class StatsService:

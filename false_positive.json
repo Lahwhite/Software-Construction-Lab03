@@ -1,0 +1,9 @@
+{
+  "1": {
+    "CWE": "N/A",
+    "name": "trailing-newlines",
+    "File": "软件工程/code\\ledger/__init__.py",
+    "Line": "11",
+    "At": "Trailing newlines"
+  }
+}

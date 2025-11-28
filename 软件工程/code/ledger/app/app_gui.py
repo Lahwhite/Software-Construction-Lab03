@@ -2,160 +2,26 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from datetime import date, datetime, timedelta
-from typing import Optional
+from datetime import date, timedelta
 
 # 支持直接运行：添加父目录到路径，使能导入 ledger 包
-_code_dir = Path(__file__).parent.parent
-if str(_code_dir) not in sys.path:
-    sys.path.insert(0, str(_code_dir))
+_here = Path(__file__).resolve()
+_package_dir = _here.parent  # ledger/ 目录
+_repo_root = _package_dir.parent  # code/ 目录
+for path in (_package_dir, _repo_root):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
 
 import tkinter as tk
-from tkinter import messagebox, ttk
-from tkinter.font import Font
+from tkinter import ttk
 
-try:
-    # 优先尝试相对导入（作为模块时）
-    from .database import migrate
-    from .services import BudgetService, CategoryService, RecordService
-    from .stats import StatsService
-    from .repositories import RecordRepository, CategoryRepository, PaymentMethodRepository
-except ImportError:
-    # 回退到绝对导入（直接运行时）
-    from ledger.database import migrate
-    from ledger.services import BudgetService, CategoryService, RecordService
-    from ledger.stats import StatsService
-    from ledger.repositories import RecordRepository, CategoryRepository, PaymentMethodRepository
-
-
-# 二次元风格配色方案
-class AnimeTheme:
-    """二次元风格配色主题"""
-    # 主色调：粉蓝、粉紫（更柔和、具有二次元氛围）
-    PRIMARY_PINK = "#F7B7D2"  # 柔粉
-    PRIMARY_BLUE = "#A5C7FF"  # 水蓝
-    PRIMARY_PURPLE = "#CDA4FF"  # 薰衣草紫
-    
-    # 背景色（整体淡紫+粉渐变感）
-    BG_LIGHT = "#F4E5FF"  # 主背景（偏淡紫）
-    BG_MAIN = "#FFF3FB"  # 内容背景（偏粉）
-    BG_CARD = "#FFFFFF"  # 卡片背景（纯白更显层次）
-    BG_GRADIENT_START = "#EAD6FF"
-    BG_GRADIENT_END = "#FFE8F2"
-    
-    # 文字颜色
-    TEXT_DARK = "#2C2C2C"
-    TEXT_LIGHT = "#666666"
-    
-    # 功能色
-    INCOME_GREEN = "#90EE90"  # 收入绿色
-    EXPENSE_RED = "#FF6B6B"  # 支出红色
-    WARNING_ORANGE = "#FFA500"  # 预警橙色
-    
-    # 按钮颜色（更深的色调以增强对比度）
-    BUTTON_PRIMARY = "#E91E63"  # 深粉红
-    BUTTON_SECONDARY = "#7B1FA2"  # 深紫
-    BUTTON_HOVER = "#C2185B"  # 悬停色
-    BUTTON_TEXT = "#FFFFFF"  # 文字颜色
-    BUTTON_TEXT_DARK = "#1A1A1A"
-
-
-class AnimeStyle:
-    """二次元风格样式管理器"""
-    
-    @staticmethod
-    def create_button(parent, text: str, command, style_type: str = "primary", **kwargs) -> tk.Button:
-        """创建自定义按钮，保证颜色对比度足够"""
-        if style_type == "secondary":
-            bg = AnimeTheme.BUTTON_SECONDARY
-            fg = AnimeTheme.BUTTON_TEXT
-            active_bg = "#6A1B9A"
-        else:
-            bg = AnimeTheme.BUTTON_PRIMARY
-            fg = AnimeTheme.BUTTON_TEXT
-            active_bg = AnimeTheme.BUTTON_HOVER
-        button = tk.Button(
-            parent,
-            text=text,
-            command=command,
-            bg=bg,
-            fg=fg,
-            activebackground=active_bg,
-            activeforeground=fg,
-            font=("Microsoft YaHei UI", 10, "bold"),
-            relief=tk.RAISED,
-            bd=2,
-            padx=15,
-            pady=6,
-            cursor="hand2",
-            **kwargs,
-        )
-        return button
-
-    @staticmethod
-    def configure_theme(root: tk.Tk) -> None:
-        """配置全局二次元主题"""
-        style = ttk.Style()
-        
-        # 配置 Notebook（标签页）样式
-        style.configure("TNotebook", background=AnimeTheme.BG_LIGHT, borderwidth=0)
-        style.configure("TNotebook.Tab", 
-                       background=AnimeTheme.PRIMARY_PINK,
-                       foreground=AnimeTheme.TEXT_DARK,
-                       padding=[20, 10],
-                       font=("Microsoft YaHei UI", 10, "bold"))
-        style.map("TNotebook.Tab",
-                 background=[("selected", AnimeTheme.PRIMARY_BLUE)],
-                 expand=[("selected", [1, 1, 1, 0])])
-        
-        # 配置按钮样式
-        style.configure("Anime.TButton",
-                       background=AnimeTheme.BUTTON_PRIMARY,
-                       foreground="white",
-                       font=("Microsoft YaHei UI", 10, "bold"),
-                       borderwidth=0,
-                       focuscolor="none",
-                       padding=[15, 8])
-        style.map("Anime.TButton",
-                 background=[("active", AnimeTheme.BUTTON_HOVER),
-                           ("pressed", AnimeTheme.PRIMARY_PURPLE)])
-        
-        # 配置次要按钮
-        style.configure("AnimeSecondary.TButton",
-                       background=AnimeTheme.BUTTON_SECONDARY,
-                       foreground="white",
-                       font=("Microsoft YaHei UI", 9),
-                       borderwidth=0,
-                       padding=[12, 6])
-        
-        # 配置输入框样式
-        style.configure("Anime.TEntry",
-                       fieldbackground=AnimeTheme.BG_MAIN,
-                       foreground=AnimeTheme.TEXT_DARK,
-                       borderwidth=2,
-                       relief="flat",
-                       padding=5)
-        
-        # 配置标签样式
-        style.configure("Anime.TLabel",
-                       background=AnimeTheme.BG_LIGHT,
-                       foreground=AnimeTheme.TEXT_DARK,
-                       font=("Microsoft YaHei UI", 10))
-        
-        # 配置标题标签
-        style.configure("AnimeTitle.TLabel",
-                       background=AnimeTheme.BG_LIGHT,
-                       foreground=AnimeTheme.TEXT_DARK,
-                       font=("Microsoft YaHei UI", 14, "bold"))
-        
-        # 配置框架样式
-        style.configure("AnimeCard.TFrame",
-                       background=AnimeTheme.BG_CARD,
-                       relief="flat",
-                       borderwidth=2)
-        
-        # 设置窗口背景
-        root.configure(bg=AnimeTheme.BG_LIGHT)
+from ledger.data.database import migrate
+from ledger.business.services import BudgetService, CategoryService, RecordService
+from ledger.business.stats import StatsService
+from ledger.data.repositories import RecordRepository, CategoryRepository, PaymentMethodRepository
+from ledger.ui.ui_theme import AnimeTheme, apply_theme, create_button, draw_gradient_background
+from ledger.ui.ui_widgets import show_success, show_error, show_info, ask_yesno
+from ledger.ui.views import home_view, record_view
 
 
 class LedgerApp(tk.Tk):
@@ -165,15 +31,11 @@ class LedgerApp(tk.Tk):
         self.geometry("1000x700")
         self.resizable(True, True)
         
-        # 应用二次元主题
-        AnimeStyle.configure_theme(self)
-        
-        # 背景渐变画布
+        apply_theme(self)
         self.bg_canvas = tk.Canvas(self, highlightthickness=0, bd=0)
         self.bg_canvas.pack(fill=tk.BOTH, expand=True)
-        self.bg_canvas.bind("<Configure>", self._draw_background)
+        self.bg_canvas.bind("<Configure>", lambda _: draw_gradient_background(self.bg_canvas))
 
-        # 主内容容器覆盖在画布上方
         self.main_container = tk.Frame(self, bg="", highlightthickness=0)
         self.main_container.place(relwidth=1, relheight=1)
         
@@ -200,7 +62,6 @@ class LedgerApp(tk.Tk):
         self.page_search = ttk.Frame(notebook)
         self.page_categories = ttk.Frame(notebook)
         
-        # 添加页面到标签页
         notebook.add(self.page_home, text="🏠 首页")
         notebook.add(self.page_add, text="➕ 添加记录")
         notebook.add(self.page_list, text="📋 记录列表")
@@ -209,108 +70,17 @@ class LedgerApp(tk.Tk):
         notebook.add(self.page_search, text="🔍 搜索")
         notebook.add(self.page_categories, text="📁 分类管理")
         
-        # 构建各个页面
-        self._build_home_page(self.page_home)
-        self._build_add_page(self.page_add)
-        self._build_list_page(self.page_list)
+        home_view.build(self, self.page_home)
+        record_view.build_add_page(self, self.page_add)
+        record_view.build_list_page(self, self.page_list)
         self._build_budget_page(self.page_budget)
         self._build_stats_page(self.page_stats)
         self._build_search_page(self.page_search)
         self._build_category_page(self.page_categories)
         
-        # 刷新首页数据
-        self._refresh_home()
+        self.refresh_home()
     
-    # --- Home Page (首页仪表盘) ---
-    def _build_home_page(self, parent: ttk.Frame) -> None:
-        parent.configure(style="AnimeCard.TFrame")
-        
-        # 顶部标题区域
-        title_frame = ttk.Frame(parent)
-        title_frame.pack(fill=tk.X, padx=20, pady=15)
-        title_label = ttk.Label(title_frame, text="✨ 次元记账仪表盘 ✨", 
-                               style="AnimeTitle.TLabel",
-                               font=("Microsoft YaHei UI", 18, "bold"))
-        title_label.pack()
-        
-        # 刷新按钮
-        refresh_btn = AnimeStyle.create_button(
-            title_frame,
-            text="🔄 刷新",
-            command=self._refresh_home,
-            style_type="secondary"
-        )
-        refresh_btn.pack(side=tk.RIGHT)
-        
-        # 收支概览卡片区域
-        overview_frame = ttk.Frame(parent)
-        overview_frame.pack(fill=tk.X, padx=20, pady=10)
-        
-        # 收入卡片
-        self.income_card = self._create_card(overview_frame, "💰 本月收入", "0.00", AnimeTheme.INCOME_GREEN)
-        self.income_card.pack(side=tk.LEFT, padx=10, fill=tk.BOTH, expand=True)
-        
-        # 支出卡片
-        self.expense_card = self._create_card(overview_frame, "💸 本月支出", "0.00", AnimeTheme.EXPENSE_RED)
-        self.expense_card.pack(side=tk.LEFT, padx=10, fill=tk.BOTH, expand=True)
-        
-        # 预算进度区域
-        budget_frame = ttk.Frame(parent)
-        budget_frame.pack(fill=tk.X, padx=20, pady=10)
-        
-        self.budget_label = ttk.Label(budget_frame, text="💰 预算进度", 
-                                     style="AnimeTitle.TLabel")
-        self.budget_label.pack(anchor=tk.W)
-        
-        self.budget_canvas = tk.Canvas(budget_frame, height=30, bg=AnimeTheme.BG_CARD,
-                                      highlightthickness=0)
-        self.budget_canvas.pack(fill=tk.X, pady=5)
-        self.budget_text = ttk.Label(budget_frame, text="", style="Anime.TLabel")
-        self.budget_text.pack(anchor=tk.W)
-        
-        # 最近记录区域
-        recent_frame = ttk.Frame(parent)
-        recent_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
-        
-        recent_label = ttk.Label(recent_frame, text="📝 最近记录", 
-                                style="AnimeTitle.TLabel")
-        recent_label.pack(anchor=tk.W, pady=(0, 10))
-        
-        # 最近记录列表
-        self.recent_tree = ttk.Treeview(recent_frame, 
-                                       columns=("amount", "type", "category", "date", "note"),
-                                       show="headings", height=8)
-        self.recent_tree.heading("amount", text="金额")
-        self.recent_tree.heading("type", text="类型")
-        self.recent_tree.heading("category", text="分类")
-        self.recent_tree.heading("date", text="日期")
-        self.recent_tree.heading("note", text="备注")
-        
-        for col in ("amount", "type", "category", "date", "note"):
-            self.recent_tree.column(col, width=120, anchor=tk.CENTER)
-        
-        scrollbar = ttk.Scrollbar(recent_frame, orient=tk.VERTICAL, command=self.recent_tree.yview)
-        self.recent_tree.configure(yscrollcommand=scrollbar.set)
-        self.recent_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-    
-    def _create_card(self, parent: ttk.Frame, title: str, value: str, color: str) -> ttk.Frame:
-        """创建二次元风格卡片"""
-        card = tk.Frame(parent, bg=AnimeTheme.BG_CARD, relief=tk.RAISED, bd=2)
-        
-        title_label = tk.Label(card, text=title, bg=AnimeTheme.BG_CARD,
-                              fg=AnimeTheme.TEXT_DARK,
-                              font=("Microsoft YaHei UI", 12, "bold"))
-        title_label.pack(pady=(15, 5))
-        
-        value_label = tk.Label(card, text=value, bg=AnimeTheme.BG_CARD,
-                              fg=color,
-                              font=("Microsoft YaHei UI", 20, "bold"))
-        value_label.pack(pady=(0, 15))
-        
-        return card
-    
-    def _refresh_home(self) -> None:
+    def refresh_home(self) -> None:
         """刷新首页数据"""
         try:
             # 计算本月收支
@@ -325,15 +95,10 @@ class LedgerApp(tk.Tk):
             income = sum(r.amount for r in records if r.type == "income")
             expense = sum(r.amount for r in records if r.type == "expense")
             
-            # 更新收入卡片
-            income_card_children = self.income_card.winfo_children()
-            if len(income_card_children) >= 2:
-                income_card_children[1].config(text=f"¥{income:.2f}")
-            
-            # 更新支出卡片
-            expense_card_children = self.expense_card.winfo_children()
-            if len(expense_card_children) >= 2:
-                expense_card_children[1].config(text=f"¥{expense:.2f}")
+            if hasattr(self, "income_value"):
+                self.income_value.config(text=f"¥{income:.2f}")
+            if hasattr(self, "expense_value"):
+                self.expense_value.config(text=f"¥{expense:.2f}")
             
             # 更新预算进度
             month_str = today.strftime("%Y-%m")
@@ -345,31 +110,33 @@ class LedgerApp(tk.Tk):
                 threshold = progress.threshold
                 
                 # 绘制进度条
-                self.budget_canvas.delete("all")
-                width = self.budget_canvas.winfo_width() or 400
+                canvas = getattr(self, "home_budget_canvas", None)
+                if not canvas:
+                    raise RuntimeError("home budget canvas missing")
+                canvas.delete("all")
+                width = canvas.winfo_width() or 400
                 height = 30
                 
                 # 背景
-                self.budget_canvas.create_rectangle(0, 0, width, height, 
-                                                   fill=AnimeTheme.BG_MAIN, outline=AnimeTheme.PRIMARY_PINK, width=2)
+                canvas.create_rectangle(0, 0, width, height, 
+                                        fill=AnimeTheme.BG_MAIN, outline=AnimeTheme.PRIMARY_PINK, width=2)
                 
                 # 进度条
                 progress_width = int(width * min(ratio, 1.0))
                 progress_color = AnimeTheme.EXPENSE_RED if ratio >= threshold else AnimeTheme.PRIMARY_BLUE
-                self.budget_canvas.create_rectangle(2, 2, progress_width - 2, height - 2,
-                                                   fill=progress_color, outline="")
+                canvas.create_rectangle(2, 2, progress_width - 2, height - 2,
+                                        fill=progress_color, outline="")
                 
                 # 文字
-                self.budget_text.config(
+                self.home_budget_text.config(
                     text=f"已用: ¥{used:.2f} / 总预算: ¥{total:.2f} ({ratio:.1%})" +
                     (" ⚠️ 预警！" if ratio >= threshold and total > 0 else "")
                 )
             except Exception:
-                self.budget_text.config(text="未设置预算")
+                self.home_budget_text.config(text="未设置预算")
             
             # 更新最近记录
-            for item in self.recent_tree.get_children():
-                self.recent_tree.delete(item)
+            self.recent_tree.delete(*self.recent_tree.get_children())
             
             recent_records = self.record_service.list_recent(limit=10)
             id_to_cat = {c.id: c.name for c in self.category_repo.list_all()}
@@ -383,99 +150,9 @@ class LedgerApp(tk.Tk):
                     amount_str, type_str, cat_name, r.date.isoformat(), r.note or ""
                 ))
         except Exception as exc:
-            messagebox.showerror("错误", f"刷新首页数据失败: {exc}")
+            show_error(f"刷新首页数据失败: {exc}")
     
-    # --- Add Record Page ---
-    def _build_add_page(self, parent: ttk.Frame) -> None:
-        parent.configure(style="AnimeCard.TFrame")
-        
-        main_frame = ttk.Frame(parent)
-        main_frame.pack(fill=tk.BOTH, expand=True, padx=30, pady=30)
-        
-        pad = {"padx": 10, "pady": 12}
-        
-        # 标题
-        title = ttk.Label(main_frame, text="➕ 添加收支记录", style="AnimeTitle.TLabel")
-        title.grid(row=0, column=0, columnspan=3, pady=(0, 20))
-        
-        # 类型选择
-        type_label = ttk.Label(main_frame, text="类型", style="Anime.TLabel")
-        type_label.grid(row=1, column=0, sticky=tk.W, **pad)
-        self.var_type = tk.StringVar(value="expense")
-        type_frame = ttk.Frame(main_frame)
-        type_frame.grid(row=1, column=1, columnspan=2, sticky=tk.W, **pad)
-        ttk.Radiobutton(type_frame, text="💰 收入", variable=self.var_type, value="income",
-                       style="Anime.TLabel").pack(side=tk.LEFT, padx=10)
-        ttk.Radiobutton(type_frame, text="💸 支出", variable=self.var_type, value="expense",
-                       style="Anime.TLabel").pack(side=tk.LEFT, padx=10)
-        
-        # 金额
-        amount_label = ttk.Label(main_frame, text="金额", style="Anime.TLabel")
-        amount_label.grid(row=2, column=0, sticky=tk.W, **pad)
-        self.var_amount = tk.StringVar()
-        amount_entry = ttk.Entry(main_frame, textvariable=self.var_amount, 
-                                style="Anime.TEntry", width=30, font=("Microsoft YaHei UI", 12))
-        amount_entry.grid(row=2, column=1, columnspan=2, sticky=tk.W, **pad)
-        amount_entry.focus()
-        
-        # 日期
-        date_label = ttk.Label(main_frame, text="日期", style="Anime.TLabel")
-        date_label.grid(row=3, column=0, sticky=tk.W, **pad)
-        self.var_date = tk.StringVar(value=date.today().isoformat())
-        date_entry = ttk.Entry(main_frame, textvariable=self.var_date, style="Anime.TEntry", width=30)
-        date_entry.grid(row=3, column=1, columnspan=2, sticky=tk.W, **pad)
-        
-        # 支付方式
-        method_label = ttk.Label(main_frame, text="支付方式", style="Anime.TLabel")
-        method_label.grid(row=4, column=0, sticky=tk.W, **pad)
-        self.var_method = tk.StringVar(value="WeChat")
-        methods = [m.name for m in self.method_repo.list_all()]
-        method_combo = ttk.Combobox(main_frame, textvariable=self.var_method, 
-                                   values=methods, state="readonly", width=27)
-        method_combo.grid(row=4, column=1, columnspan=2, sticky=tk.W, **pad)
-        
-        # 分类
-        category_label = ttk.Label(main_frame, text="分类", style="Anime.TLabel")
-        category_label.grid(row=5, column=0, sticky=tk.W, **pad)
-        self.var_category = tk.StringVar()
-        categories = [c.name for c in self.category_repo.list_all()]
-        category_combo = ttk.Combobox(main_frame, textvariable=self.var_category,
-                                     values=categories, width=27)
-        category_combo.grid(row=5, column=1, columnspan=2, sticky=tk.W, **pad)
-        
-        # 备注
-        note_label = ttk.Label(main_frame, text="备注", style="Anime.TLabel")
-        note_label.grid(row=6, column=0, sticky=tk.W, **pad)
-        self.var_note = tk.StringVar(value="记录具体场景吧～")
-        note_entry = ttk.Entry(main_frame, textvariable=self.var_note, 
-                              style="Anime.TEntry", width=30)
-        note_entry.grid(row=6, column=1, columnspan=2, sticky=tk.W, **pad)
-        
-        def on_note_focus_in(e):
-            if self.var_note.get() == "记录具体场景吧～":
-                note_entry.config(foreground=AnimeTheme.TEXT_DARK)
-                self.var_note.set("")
-        
-        def on_note_focus_out(e):
-            if not self.var_note.get().strip():
-                self.var_note.set("记录具体场景吧～")
-                note_entry.config(foreground=AnimeTheme.TEXT_LIGHT)
-        
-        note_entry.bind("<FocusIn>", on_note_focus_in)
-        note_entry.bind("<FocusOut>", on_note_focus_out)
-        note_entry.config(foreground=AnimeTheme.TEXT_LIGHT)
-        
-        # 保存按钮（自定义按钮确保对比度）
-        btn_frame = ttk.Frame(main_frame)
-        btn_frame.grid(row=7, column=0, columnspan=3, pady=20)
-        AnimeStyle.create_button(
-            btn_frame, text="✨ 保存记录", command=self._on_add_record, style_type="primary"
-        ).pack()
-        
-        for i in range(3):
-            main_frame.grid_columnconfigure(i, weight=1)
-    
-    def _on_add_record(self) -> None:
+    def add_record(self) -> None:
         try:
             type_ = self.var_type.get()
             amount = float(self.var_amount.get())
@@ -489,60 +166,21 @@ class LedgerApp(tk.Tk):
             self.record_service.add_record(
                 type_=type_, amount=amount, date_=date_, payment_method=method, category=category, note=note
             )
-            self._show_success("✨ 记录已添加成功！")
+            show_success("✨ 记录已添加成功！")
             # 清空表单（保留类型和日期）
             self.var_amount.set("")
             self.var_category.set("")
             self.var_note.set("记录具体场景吧～")
-            self._refresh_list()
-            self._refresh_home()
+            self.refresh_records()
+            self.refresh_home()
         except Exception as exc:
-            self._show_error(f"添加失败: {exc}")
+            show_error(f"添加失败: {exc}")
     
-    # --- Records List Page ---
-    def _build_list_page(self, parent: ttk.Frame) -> None:
-        toolbar = ttk.Frame(parent)
-        toolbar.pack(fill=tk.X, padx=10, pady=10)
-        
-        btn_refresh = AnimeStyle.create_button(
-            toolbar, text="🔄 刷新", command=self._refresh_list, style_type="secondary"
-        )
-        btn_refresh.pack(side=tk.LEFT, padx=5)
-        
-        btn_delete = AnimeStyle.create_button(
-            toolbar, text="🗑️ 删除选中", command=self._on_delete_selected, style_type="secondary"
-        )
-        btn_delete.pack(side=tk.LEFT, padx=5)
-        
-        # 记录列表
-        tree_frame = ttk.Frame(parent)
-        tree_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        
-        self.tree = ttk.Treeview(tree_frame, 
-                                columns=("id", "type", "amount", "date", "method", "category", "note"),
-                                show="headings")
-        for col, text in (
-            ("id", "ID"),
-            ("type", "类型"),
-            ("amount", "金额"),
-            ("date", "日期"),
-            ("method", "支付方式"),
-            ("category", "分类"),
-            ("note", "备注"),
-        ):
-            self.tree.heading(col, text=text)
-            self.tree.column(col, width=120, stretch=True)
-        
-        scrollbar = ttk.Scrollbar(tree_frame, orient=tk.VERTICAL, command=self.tree.yview)
-        self.tree.configure(yscrollcommand=scrollbar.set)
-        self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        
-        self._refresh_list()
-    
-    def _refresh_list(self) -> None:
-        for i in self.tree.get_children():
-            self.tree.delete(i)
+    def refresh_records(self) -> None:
+        tree = getattr(self, "records_tree", None)
+        if not tree:
+            return
+        tree.delete(*tree.get_children())
         
         rows = self.record_service.list_recent(limit=200)
         id_to_cat = {c.id: c.name for c in self.category_repo.list_all()}
@@ -552,27 +190,30 @@ class LedgerApp(tk.Tk):
             cat_name = id_to_cat.get(r.category_id, "未分类") if r.category_id else "未分类"
             method_name = id_to_method.get(r.payment_method_id, "未知")
             type_str = "💰 收入" if r.type == "income" else "💸 支出"
-            self.tree.insert("", tk.END, values=(
+            tree.insert("", tk.END, values=(
                 r.id, type_str, f"¥{r.amount:.2f}", r.date.isoformat(), method_name, cat_name, r.note or ""
             ))
     
-    def _on_delete_selected(self) -> None:
-        sel = self.tree.selection()
+    def delete_selected_records(self) -> None:
+        tree = getattr(self, "records_tree", None)
+        if not tree:
+            return
+        sel = tree.selection()
         if not sel:
-            self._show_info("请先选择要删除的记录")
+            show_info("请先选择要删除的记录")
             return
         
-        if self._ask_yesno("确认删除", f"确定删除选中的 {len(sel)} 条记录吗？"):
+        if ask_yesno("确认删除", f"确定删除选中的 {len(sel)} 条记录吗？"):
             try:
                 for item in sel:
-                    vals = self.tree.item(item, "values")
+                    vals = tree.item(item, "values")
                     record_id = int(vals[0])
                     self.record_service.delete_record(record_id)
-                self._refresh_list()
-                self._refresh_home()
-                self._show_success("已删除选中记录")
+                self.refresh_records()
+                self.refresh_home()
+                show_success("已删除选中记录")
             except Exception as exc:
-                self._show_error(f"删除失败: {exc}")
+                show_error(f"删除失败: {exc}")
     
     # --- Budget Page ---
     def _build_budget_page(self, parent: ttk.Frame) -> None:
@@ -607,14 +248,10 @@ class LedgerApp(tk.Tk):
         threshold_entry.pack(fill=tk.X, **pad)
         
         # 按钮
-        btn_set = AnimeStyle.create_button(
-            left_frame, text="💾 设置预算", command=self._on_set_budget, style_type="primary"
-        )
+        btn_set = create_button(left_frame, "💾 设置预算", self._on_set_budget)
         btn_set.pack(pady=15, fill=tk.X)
         
-        btn_progress = AnimeStyle.create_button(
-            left_frame, text="📊 查看进度", command=self._on_budget_progress, style_type="secondary"
-        )
+        btn_progress = create_button(left_frame, "📊 查看进度", self._on_budget_progress, style="secondary")
         btn_progress.pack(pady=5, fill=tk.X)
         
         # 右侧进度显示区域
@@ -640,10 +277,10 @@ class LedgerApp(tk.Tk):
             total = float(self.var_total.get())
             threshold = float(self.var_threshold.get())
             self.budget_service.set_budget(month, total, threshold)
-            self._show_success("预算已设置")
+            show_success("预算已设置")
             self._on_budget_progress()
         except Exception as exc:
-            self._show_error(f"设置失败: {exc}")
+            show_error(f"设置失败: {exc}")
     
     def _on_budget_progress(self) -> None:
         try:
@@ -697,7 +334,7 @@ class LedgerApp(tk.Tk):
             self.budget_progress_text.delete("1.0", tk.END)
             self.budget_progress_text.insert(tk.END, "\n".join(lines))
         except Exception as exc:
-            self._show_error(f"查看进度失败: {exc}")
+            show_error(f"查看进度失败: {exc}")
     
     # --- Stats Page ---
     def _build_stats_page(self, parent: ttk.Frame) -> None:
@@ -720,9 +357,7 @@ class LedgerApp(tk.Tk):
         self.var_stats_end = tk.StringVar(value=date.today().isoformat())
         ttk.Entry(control_frame, textvariable=self.var_stats_end, style="Anime.TEntry", width=12).pack(side=tk.LEFT, padx=5)
         
-        AnimeStyle.create_button(
-            control_frame, text="📊 查询", command=self._on_stats_query, style_type="primary"
-        ).pack(side=tk.LEFT, padx=10)
+        create_button(control_frame, "📊 查询", self._on_stats_query).pack(side=tk.LEFT, padx=10)
         
         # 结果显示区域
         result_frame = ttk.Frame(parent)
@@ -777,7 +412,7 @@ class LedgerApp(tk.Tk):
                 text=f"💰 总收入: ¥{result.total_income:.2f} | 💸 总支出: ¥{result.total_expense:.2f}"
             )
         except Exception as exc:
-            self._show_error(f"查询失败: {exc}")
+            show_error(f"查询失败: {exc}")
     
     # --- Search Page ---
     def _build_search_page(self, parent: ttk.Frame) -> None:
@@ -825,9 +460,7 @@ class LedgerApp(tk.Tk):
                        style="Anime.TLabel").pack(side=tk.LEFT, padx=5)
         
         # 搜索按钮
-        AnimeStyle.create_button(
-            search_frame, text="🔍 搜索", command=self._on_search, style_type="primary"
-        ).grid(row=4, column=0, columnspan=2, pady=10)
+        create_button(search_frame, "🔍 搜索", self._on_search).grid(row=4, column=0, columnspan=2, pady=10)
         
         # 结果区域
         result_frame = ttk.Frame(parent)
@@ -884,9 +517,9 @@ class LedgerApp(tk.Tk):
                     r.id, type_str, f"¥{r.amount:.2f}", r.date.isoformat(), cat_name, r.note or ""
                 ))
             
-            self._show_success(f"找到 {len(records)} 条记录")
+            show_success(f"找到 {len(records)} 条记录")
         except Exception as exc:
-            self._show_error(f"搜索失败: {exc}")
+            show_error(f"搜索失败: {exc}")
     
     # --- Category Page ---
     def _build_category_page(self, parent: ttk.Frame) -> None:
@@ -912,12 +545,8 @@ class LedgerApp(tk.Tk):
         
         self.var_new_category = tk.StringVar()
         ttk.Entry(entry_frame, textvariable=self.var_new_category, style="Anime.TEntry", width=20).pack(fill=tk.X, pady=5)
-        AnimeStyle.create_button(
-            entry_frame, text="➕ 添加", command=self._on_add_category, style_type="primary"
-        ).pack(fill=tk.X, pady=5)
-        AnimeStyle.create_button(
-            entry_frame, text="🗑️ 删除选中", command=self._on_delete_category, style_type="secondary"
-        ).pack(fill=tk.X, pady=5)
+        create_button(entry_frame, "➕ 添加", self._on_add_category).pack(fill=tk.X, pady=5)
+        create_button(entry_frame, "🗑️ 删除选中", self._on_delete_category, style="secondary").pack(fill=tk.X, pady=5)
         
         self._refresh_categories()
     
@@ -930,101 +559,31 @@ class LedgerApp(tk.Tk):
     def _on_add_category(self) -> None:
         name = (self.var_new_category.get() or "").strip()
         if not name:
-            self._show_info("请输入分类名称")
+            show_info("请输入分类名称")
             return
         try:
             self.category_service.add(name)
             self.var_new_category.set("")
             self._refresh_categories()
-            self._show_success("分类已添加")
+            show_success("分类已添加")
         except Exception as exc:
-            self._show_error(f"添加失败: {exc}")
+            show_error(f"添加失败: {exc}")
     
     def _on_delete_category(self) -> None:
         sel = self.listbox_categories.curselection()
         if not sel:
-            self._show_info("请先选择要删除的分类")
+            show_info("请先选择要删除的分类")
             return
         item = self.listbox_categories.get(sel[0])
         try:
             cid = int(item.split(":", 1)[0])
-            if self._ask_yesno("确认删除", f"确定删除分类 {item}? 相关记录将显示为未分类。"):
+            if ask_yesno("确认删除", f"确定删除分类 {item}? 相关记录将显示为未分类。"):
                 self.category_service.delete(cid)
                 self._refresh_categories()
-                self._show_success("分类已删除")
+                show_success("分类已删除")
         except Exception as exc:
-            self._show_error(f"删除失败: {exc}")
+            show_error(f"删除失败: {exc}")
     
-    # --- 背景绘制 ---
-    def _draw_background(self, event=None) -> None:
-        """绘制淡紫-粉渐变背景 + 点缀光斑"""
-        width = self.bg_canvas.winfo_width()
-        height = self.bg_canvas.winfo_height()
-        if width <= 0 or height <= 0:
-            return
-        self.bg_canvas.delete("gradient")
-        steps = 80
-        for i in range(steps):
-            ratio = i / steps
-            color = self._interpolate_color(
-                AnimeTheme.BG_GRADIENT_START, AnimeTheme.BG_GRADIENT_END, ratio
-            )
-            y0 = int(height * ratio)
-            y1 = int(height * (i + 1) / steps)
-            self.bg_canvas.create_rectangle(
-                0, y0, width, y1, fill=color, outline="", tags="gradient"
-            )
-        # 添加柔光圆形点缀
-        self.bg_canvas.create_oval(
-            width * 0.6,
-            height * 0.1,
-            width * 0.95,
-            height * 0.45,
-            fill="#FFFFFF20",
-            outline="",
-            tags="gradient",
-        )
-        self.bg_canvas.create_oval(
-            width * 0.05,
-            height * 0.6,
-            width * 0.4,
-            height * 0.95,
-            fill="#FAD7FF30",
-            outline="",
-            tags="gradient",
-        )
-    
-    @staticmethod
-    def _interpolate_color(start_hex: str, end_hex: str, ratio: float) -> str:
-        """线性插值颜色"""
-        ratio = max(0.0, min(1.0, ratio))
-        s = int(start_hex[1:], 16)
-        e = int(end_hex[1:], 16)
-        r1, g1, b1 = (s >> 16) & 0xFF, (s >> 8) & 0xFF, s & 0xFF
-        r2, g2, b2 = (e >> 16) & 0xFF, (e >> 8) & 0xFF, e & 0xFF
-        r = int(r1 + (r2 - r1) * ratio)
-        g = int(g1 + (g2 - g1) * ratio)
-        b = int(b1 + (b2 - b1) * ratio)
-        return f"#{r:02X}{g:02X}{b:02X}"
-    
-    # --- Custom Message Boxes (二次元风格弹窗) ---
-    def _show_success(self, message: str) -> None:
-        """显示成功提示"""
-        messagebox.showinfo("✨ 成功", message, icon="info")
-    
-    def _show_error(self, message: str) -> None:
-        """显示错误提示"""
-        messagebox.showerror("❌ 错误", message, icon="error")
-    
-    def _show_info(self, message: str) -> None:
-        """显示信息提示"""
-        messagebox.showinfo("ℹ️ 提示", message, icon="info")
-    
-    def _ask_yesno(self, title: str, message: str) -> bool:
-        """显示确认对话框"""
-        return messagebox.askyesno(title, message, icon="question")
-
-
 def main() -> None:
     app = LedgerApp()
     app.mainloop()
