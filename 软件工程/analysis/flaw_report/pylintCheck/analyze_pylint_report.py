@@ -79,8 +79,11 @@ def verify_issue(file_path, line_num, issue_type):
     return False, "未知问题类型"
 
 def main():
+    # 获取当前脚本所在目录
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    
     # 最新的Pylint报告
-    report_path = "analysis_results/pylint_report_20251128_155303.txt"
+    report_path = os.path.join(script_dir, "analysis_results/pylint_report_20251128_155303.txt")
     
     if not os.path.exists(report_path):
         print(f"报告文件不存在: {report_path}")
@@ -102,17 +105,18 @@ def main():
         print(f"行号: {issue['line']}")
         print(f"类型: {issue['message_id']}")
         
-        # 获取真实文件路径
-        real_file_path = os.path.join("软件工程/code", issue['file'].replace('软件工程/code/', ''))
+        # 获取真实文件路径 - 相对于软件工程目录
+        project_root = os.path.dirname(script_dir)  # 软件工程目录
+        real_file_path = os.path.join(project_root, issue['file'].replace('软件工程/', ''))
         
         is_real, details = verify_issue(real_file_path, issue['line'], issue['message_id'])
         print(f"结果: {'真实存在' if is_real else '误报'} - {details}")
         
-        # 格式化结果
+        # 格式化结果 - 使用相对于项目根目录的路径
         result = {
             "CWE": "N/A",  # Pylint没有直接对应CWE
             "name": issue['message_id'],
-            "File": real_file_path,
+            "File": issue['file'].replace('软件工程/', ''),  # 移除前面的"软件工程/"前缀
             "Line": str(issue['line']),
             "At": f"{issue['description']}"
         }
@@ -124,18 +128,18 @@ def main():
             fp_count += 1
             false_positives[str(fp_count)] = result
     
-    # 保存结果
-    with open("true_positive.json", "w", encoding="utf-8") as f:
+    # 保存结果到当前目录
+    with open(os.path.join(script_dir, "true_positive.json"), "w", encoding="utf-8") as f:
         json.dump(true_positives, f, ensure_ascii=False, indent=2)
     
-    with open("false_positive.json", "w", encoding="utf-8") as f:
+    with open(os.path.join(script_dir, "false_positive.json"), "w", encoding="utf-8") as f:
         json.dump(false_positives, f, ensure_ascii=False, indent=2)
     
     print(f"\n分析完成:")
     print(f"真实报告: {tp_count} 个")
     print(f"误报: {fp_count} 个")
-    print(f"真实报告已保存到: true_positive.json")
-    print(f"误报已保存到: false_positive.json")
+    print(f"真实报告已保存到: {os.path.join(script_dir, 'true_positive.json')}")
+    print(f"误报已保存到: {os.path.join(script_dir, 'false_positive.json')}")
 
 if __name__ == "__main__":
     main()

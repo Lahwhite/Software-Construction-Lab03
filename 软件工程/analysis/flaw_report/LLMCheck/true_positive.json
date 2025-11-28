@@ -1,0 +1,107 @@
+{
+  "1": {
+    "CWE": "N/A",
+    "name": "missing-docstring",
+    "File": "code/ledger/business/services.py",
+    "Line": "1",
+    "At": "Missing module docstring"
+  },
+  "2": {
+    "CWE": "N/A",
+    "name": "missing-docstring",
+    "File": "code/ledger/business/stats.py",
+    "Line": "1",
+    "At": "Missing module docstring"
+  },
+  "3": {
+    "CWE": "N/A",
+    "name": "missing-docstring",
+    "File": "code/ledger/data/database.py",
+    "Line": "1",
+    "At": "Missing module docstring"
+  },
+  "4": {
+    "CWE": "N/A",
+    "name": "missing-docstring",
+    "File": "code/ledger/data/models.py",
+    "Line": "1",
+    "At": "Missing module docstring"
+  },
+  "5": {
+    "CWE": "N/A",
+    "name": "missing-docstring",
+    "File": "code/ledger/data/repositories.py",
+    "Line": "1",
+    "At": "Missing module docstring"
+  },
+  "6": {
+    "CWE": "N/A",
+    "name": "missing-docstring",
+    "File": "code/ledger/ui/ui_theme.py",
+    "Line": "1",
+    "At": "Missing module docstring"
+  },
+  "7": {
+    "CWE": "N/A",
+    "name": "missing-docstring",
+    "File": "code/ledger/ui/ui_widgets.py",
+    "Line": "1",
+    "At": "Missing module docstring"
+  },
+  "8": {
+    "CWE": "N/A",
+    "name": "missing-docstring",
+    "File": "code/ledger/ui/views/home_view.py",
+    "Line": "1",
+    "At": "Missing module docstring"
+  },
+  "9": {
+    "CWE": "N/A",
+    "name": "missing-docstring",
+    "File": "code/ledger/ui/views/record_view.py",
+    "Line": "1",
+    "At": "Missing module docstring"
+  },
+  "10": {
+    "CWE": "N/A",
+    "name": "missing-docstring",
+    "File": "code/ledger/utils/utils.py",
+    "Line": "1",
+    "At": "Missing module docstring"
+  },
+  "11": {
+    "CWE": "N/A",
+    "name": "line-too-long",
+    "File": "code/ledger/app/app_gui.py",
+    "Line": "122",
+    "At": "Line too long (107/100)"
+  },
+  "12": {
+    "CWE": "N/A",
+    "name": "trailing-whitespace",
+    "File": "code/ledger/app/app_gui.py",
+    "Line": "33",
+    "At": "Trailing whitespace"
+  },
+  "13": {
+    "CWE": "N/A",
+    "name": "unused-import",
+    "File": "code/ledger/business/services.py",
+    "Line": "1",
+    "At": "Unused import Tuple"
+  },
+  "14": {
+    "CWE": "N/A",
+    "name": "unused-import",
+    "File": "code/ledger/business/stats.py",
+    "Line": "1",
+    "At": "Unused import List"
+  },
+  "15": {
+    "CWE": "N/A",
+    "name": "unused-import",
+    "File": "code/ledger/business/stats.py",
+    "Line": "1",
+    "At": "Unused import Tuple"
+  }
+}

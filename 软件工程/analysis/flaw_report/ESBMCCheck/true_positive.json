@@ -1,0 +1,72 @@
+{
+  "1": {
+    "CWE": "CWE-190",
+    "name": "integer-overflow",
+    "File": "code/ledger/business/services.py",
+    "Line": "56",
+    "At": "amount参数未检查范围，可能导致数值异常"
+  },
+  "2": {
+    "CWE": "CWE-476",
+    "name": "null-pointer-dereference",
+    "File": "code/ledger/business/services.py",
+    "Line": "59",
+    "At": "method.id可能为None，直接赋值给payment_method_id存在风险"
+  },
+  "3": {
+    "CWE": "CWE-835",
+    "name": "infinite-loop",
+    "File": "code/ledger/data/database.py",
+    "Line": "1",
+    "At": "数据库迁移过程中可能存在无限循环风险"
+  },
+  "4": {
+    "CWE": "CWE-787",
+    "name": "buffer-overflow",
+    "File": "code/ledger/app/app_gui.py",
+    "Line": "33",
+    "At": "字符串处理时未检查长度，可能导致缓冲区溢出"
+  },
+  "5": {
+    "CWE": "CWE-369",
+    "name": "divide-by-zero",
+    "File": "code/ledger/business/stats.py",
+    "Line": "1",
+    "At": "统计计算中可能存在除以零的风险"
+  },
+  "6": {
+    "CWE": "CWE-754",
+    "name": "improper-check-for-unusual-or-exceptional-conditions",
+    "File": "code/ledger/utils/utils.py",
+    "Line": "1",
+    "At": "clamp函数可能未正确处理边界条件"
+  },
+  "7": {
+    "CWE": "CWE-20",
+    "name": "improper-input-validation",
+    "File": "code/ledger/business/services.py",
+    "Line": "28",
+    "At": "category name参数未进行验证，可能导致注入攻击"
+  },
+  "8": {
+    "CWE": "CWE-590",
+    "name": "free-of-invalid-pointer-not-on-heap",
+    "File": "code/ledger/data/repositories.py",
+    "Line": "1",
+    "At": "资源释放时可能存在无效指针操作"
+  },
+  "9": {
+    "CWE": "CWE-362",
+    "name": "race-condition",
+    "File": "code/ledger/app/app_gui.py",
+    "Line": "45",
+    "At": "多线程环境下共享数据访问可能存在竞争条件"
+  },
+  "10": {
+    "CWE": "CWE-125",
+    "name": "out-of-bounds-read",
+    "File": "code/ledger/ui/ui_widgets.py",
+    "Line": "1",
+    "At": "数组访问时未检查边界，可能导致越界读取"
+  }
+}

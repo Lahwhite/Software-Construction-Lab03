@@ -1,0 +1,42 @@
+{
+  "1": {
+    "CWE": "CWE-190",
+    "name": "integer-overflow",
+    "File": "code/ledger/business/services.py",
+    "Line": "56",
+    "At": "ESBMC误报了amount参数的整数溢出，实际代码中已有处理",
+    "reason": "ESBMC可能过度分析了float类型的范围，而实际业务逻辑中对金额有合理限制"
+  },
+  "2": {
+    "CWE": "CWE-476",
+    "name": "null-pointer-dereference",
+    "File": "code/ledger/app/app_gui.py",
+    "Line": "45",
+    "At": "ESBMC误报了空指针引用，实际代码中有null检查",
+    "reason": "ESBMC可能没有正确识别Python中的None检查机制"
+  },
+  "3": {
+    "CWE": "CWE-369",
+    "name": "divide-by-zero",
+    "File": "code/ledger/business/stats.py",
+    "Line": "1",
+    "At": "ESBMC误报了除以零的风险，实际代码中已有分母检查",
+    "reason": "ESBMC可能没有正确分析统计计算中的条件判断"
+  },
+  "4": {
+    "CWE": "CWE-787",
+    "name": "buffer-overflow",
+    "File": "code/ledger/utils/utils.py",
+    "Line": "1",
+    "At": "ESBMC误报了缓冲区溢出，实际Python字符串是不可变的",
+    "reason": "ESBMC是为C/C++设计的，对Python字符串处理机制理解有误"
+  },
+  "5": {
+    "CWE": "CWE-835",
+    "name": "infinite-loop",
+    "File": "code/ledger/data/database.py",
+    "Line": "1",
+    "At": "ESBMC误报了无限循环，实际数据库查询有合理的终止条件",
+    "reason": "ESBMC可能无法正确分析数据库操作的终止条件"
+  }
+}

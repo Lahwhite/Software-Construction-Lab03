@@ -2,133 +2,133 @@
   "1": {
     "CWE": "N/A",
     "name": "trailing-whitespace",
-    "File": "软件工程/code\\ledger/app/app_gui.py",
+    "File": "code/ledger/app/app_gui.py",
     "Line": "33",
     "At": "Trailing whitespace"
   },
   "2": {
     "CWE": "N/A",
     "name": "trailing-whitespace",
-    "File": "软件工程/code\\ledger/app/app_gui.py",
+    "File": "code/ledger/app/app_gui.py",
     "Line": "41",
     "At": "Trailing whitespace"
   },
   "3": {
     "CWE": "N/A",
     "name": "trailing-whitespace",
-    "File": "软件工程/code\\ledger/app/app_gui.py",
+    "File": "code/ledger/app/app_gui.py",
     "Line": "43",
     "At": "Trailing whitespace"
   },
   "4": {
     "CWE": "N/A",
     "name": "trailing-whitespace",
-    "File": "软件工程/code\\ledger/app/app_gui.py",
+    "File": "code/ledger/app/app_gui.py",
     "Line": "51",
     "At": "Trailing whitespace"
   },
   "5": {
     "CWE": "N/A",
     "name": "trailing-whitespace",
-    "File": "软件工程/code\\ledger/app/app_gui.py",
+    "File": "code/ledger/app/app_gui.py",
     "Line": "55",
     "At": "Trailing whitespace"
   },
   "6": {
     "CWE": "N/A",
     "name": "trailing-whitespace",
-    "File": "软件工程/code\\ledger/app/app_gui.py",
+    "File": "code/ledger/app/app_gui.py",
     "Line": "64",
     "At": "Trailing whitespace"
   },
   "7": {
     "CWE": "N/A",
     "name": "trailing-whitespace",
-    "File": "软件工程/code\\ledger/app/app_gui.py",
+    "File": "code/ledger/app/app_gui.py",
     "Line": "72",
     "At": "Trailing whitespace"
   },
   "8": {
     "CWE": "N/A",
     "name": "trailing-whitespace",
-    "File": "软件工程/code\\ledger/app/app_gui.py",
+    "File": "code/ledger/app/app_gui.py",
     "Line": "80",
     "At": "Trailing whitespace"
   },
   "9": {
     "CWE": "N/A",
     "name": "trailing-whitespace",
-    "File": "软件工程/code\\ledger/app/app_gui.py",
+    "File": "code/ledger/app/app_gui.py",
     "Line": "82",
     "At": "Trailing whitespace"
   },
   "10": {
     "CWE": "N/A",
     "name": "trailing-whitespace",
-    "File": "软件工程/code\\ledger/app/app_gui.py",
+    "File": "code/ledger/app/app_gui.py",
     "Line": "93",
     "At": "Trailing whitespace"
   },
   "11": {
     "CWE": "N/A",
     "name": "trailing-whitespace",
-    "File": "软件工程/code\\ledger/app/app_gui.py",
+    "File": "code/ledger/app/app_gui.py",
     "Line": "97",
     "At": "Trailing whitespace"
   },
   "12": {
     "CWE": "N/A",
     "name": "trailing-whitespace",
-    "File": "软件工程/code\\ledger/app/app_gui.py",
+    "File": "code/ledger/app/app_gui.py",
     "Line": "102",
     "At": "Trailing whitespace"
   },
   "13": {
     "CWE": "N/A",
     "name": "trailing-whitespace",
-    "File": "软件工程/code\\ledger/app/app_gui.py",
+    "File": "code/ledger/app/app_gui.py",
     "Line": "111",
     "At": "Trailing whitespace"
   },
   "14": {
     "CWE": "N/A",
     "name": "trailing-whitespace",
-    "File": "软件工程/code\\ledger/app/app_gui.py",
+    "File": "code/ledger/app/app_gui.py",
     "Line": "119",
     "At": "Trailing whitespace"
   },
   "15": {
     "CWE": "N/A",
     "name": "trailing-whitespace",
-    "File": "软件工程/code\\ledger/app/app_gui.py",
+    "File": "code/ledger/app/app_gui.py",
     "Line": "121",
     "At": "Trailing whitespace"
   },
   "16": {
     "CWE": "N/A",
     "name": "line-too-long",
-    "File": "软件工程/code\\ledger/app/app_gui.py",
+    "File": "code/ledger/app/app_gui.py",
     "Line": "122",
     "At": "Line too long (106/100)"
   },
   "17": {
     "CWE": "N/A",
     "name": "trailing-whitespace",
-    "File": "软件工程/code\\ledger/app/app_gui.py",
+    "File": "code/ledger/app/app_gui.py",
     "Line": "123",
     "At": "Trailing whitespace"
   },
   "18": {
     "CWE": "N/A",
     "name": "line-too-long",
-    "File": "软件工程/code\\ledger/app/app_gui.py",
+    "File": "code/ledger/app/app_gui.py",
     "Line": "126",
     "At": "Line too long (106/100)"
   },
   "19": {
     "CWE": "N/A",
     "name": "trailing-whitespace",
-    "File": "软件工程/code\\ledger/app/app_gui.py",
+    "File": "code/ledger/app/app_gui.py",
     "Line": "129",
     "At": "Trailing whitespace"
   }
