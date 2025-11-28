@@ -31,15 +31,17 @@ except ImportError:
 # 二次元风格配色方案
 class AnimeTheme:
     """二次元风格配色主题"""
-    # 主色调：粉蓝、粉紫
-    PRIMARY_PINK = "#FFB6C1"  # 粉红
-    PRIMARY_BLUE = "#87CEEB"  # 天蓝
-    PRIMARY_PURPLE = "#DDA0DD"  # 梅紫
+    # 主色调：粉蓝、粉紫（更柔和、具有二次元氛围）
+    PRIMARY_PINK = "#F7B7D2"  # 柔粉
+    PRIMARY_BLUE = "#A5C7FF"  # 水蓝
+    PRIMARY_PURPLE = "#CDA4FF"  # 薰衣草紫
     
-    # 背景色
-    BG_LIGHT = "#FFF0F5"  # 浅粉
-    BG_MAIN = "#FFFFFF"  # 白色
-    BG_CARD = "#FFFAFA"  # 卡片背景
+    # 背景色（整体淡紫+粉渐变感）
+    BG_LIGHT = "#F4E5FF"  # 主背景（偏淡紫）
+    BG_MAIN = "#FFF3FB"  # 内容背景（偏粉）
+    BG_CARD = "#FFFFFF"  # 卡片背景（纯白更显层次）
+    BG_GRADIENT_START = "#EAD6FF"
+    BG_GRADIENT_END = "#FFE8F2"
     
     # 文字颜色
     TEXT_DARK = "#2C2C2C"
@@ -50,15 +52,46 @@ class AnimeTheme:
     EXPENSE_RED = "#FF6B6B"  # 支出红色
     WARNING_ORANGE = "#FFA500"  # 预警橙色
     
-    # 按钮颜色
-    BUTTON_PRIMARY = "#FF69B4"  # 粉红按钮
-    BUTTON_SECONDARY = "#9370DB"  # 紫色按钮
-    BUTTON_HOVER = "#FF1493"  # 悬停色
+    # 按钮颜色（更深的色调以增强对比度）
+    BUTTON_PRIMARY = "#E91E63"  # 深粉红
+    BUTTON_SECONDARY = "#7B1FA2"  # 深紫
+    BUTTON_HOVER = "#C2185B"  # 悬停色
+    BUTTON_TEXT = "#FFFFFF"  # 文字颜色
+    BUTTON_TEXT_DARK = "#1A1A1A"
 
 
 class AnimeStyle:
     """二次元风格样式管理器"""
     
+    @staticmethod
+    def create_button(parent, text: str, command, style_type: str = "primary", **kwargs) -> tk.Button:
+        """创建自定义按钮，保证颜色对比度足够"""
+        if style_type == "secondary":
+            bg = AnimeTheme.BUTTON_SECONDARY
+            fg = AnimeTheme.BUTTON_TEXT
+            active_bg = "#6A1B9A"
+        else:
+            bg = AnimeTheme.BUTTON_PRIMARY
+            fg = AnimeTheme.BUTTON_TEXT
+            active_bg = AnimeTheme.BUTTON_HOVER
+        button = tk.Button(
+            parent,
+            text=text,
+            command=command,
+            bg=bg,
+            fg=fg,
+            activebackground=active_bg,
+            activeforeground=fg,
+            font=("Microsoft YaHei UI", 10, "bold"),
+            relief=tk.RAISED,
+            bd=2,
+            padx=15,
+            pady=6,
+            cursor="hand2",
+            **kwargs,
+        )
+        return button
+
     @staticmethod
     def configure_theme(root: tk.Tk) -> None:
         """配置全局二次元主题"""
@@ -135,6 +168,15 @@ class LedgerApp(tk.Tk):
         # 应用二次元主题
         AnimeStyle.configure_theme(self)
         
+        # 背景渐变画布
+        self.bg_canvas = tk.Canvas(self, highlightthickness=0, bd=0)
+        self.bg_canvas.pack(fill=tk.BOTH, expand=True)
+        self.bg_canvas.bind("<Configure>", self._draw_background)
+
+        # 主内容容器覆盖在画布上方
+        self.main_container = tk.Frame(self, bg="", highlightthickness=0)
+        self.main_container.place(relwidth=1, relheight=1)
+        
         migrate()
         
         self.record_service = RecordService()
@@ -146,7 +188,7 @@ class LedgerApp(tk.Tk):
         self.method_repo = PaymentMethodRepository()
         
         # 创建多页签容器
-        notebook = ttk.Notebook(self, style="TNotebook")
+        notebook = ttk.Notebook(self.main_container, style="TNotebook")
         notebook.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         
         # 创建各个页面
@@ -192,9 +234,12 @@ class LedgerApp(tk.Tk):
         title_label.pack()
         
         # 刷新按钮
-        refresh_btn = ttk.Button(title_frame, text="🔄 刷新", 
-                               command=self._refresh_home,
-                               style="AnimeSecondary.TButton")
+        refresh_btn = AnimeStyle.create_button(
+            title_frame,
+            text="🔄 刷新",
+            command=self._refresh_home,
+            style_type="secondary"
+        )
         refresh_btn.pack(side=tk.RIGHT)
         
         # 收支概览卡片区域
@@ -420,12 +465,12 @@ class LedgerApp(tk.Tk):
         note_entry.bind("<FocusOut>", on_note_focus_out)
         note_entry.config(foreground=AnimeTheme.TEXT_LIGHT)
         
-        # 保存按钮
+        # 保存按钮（自定义按钮确保对比度）
         btn_frame = ttk.Frame(main_frame)
         btn_frame.grid(row=7, column=0, columnspan=3, pady=20)
-        btn_add = ttk.Button(btn_frame, text="✨ 保存记录", command=self._on_add_record,
-                           style="Anime.TButton")
-        btn_add.pack()
+        AnimeStyle.create_button(
+            btn_frame, text="✨ 保存记录", command=self._on_add_record, style_type="primary"
+        ).pack()
         
         for i in range(3):
             main_frame.grid_columnconfigure(i, weight=1)
@@ -459,12 +504,14 @@ class LedgerApp(tk.Tk):
         toolbar = ttk.Frame(parent)
         toolbar.pack(fill=tk.X, padx=10, pady=10)
         
-        btn_refresh = ttk.Button(toolbar, text="🔄 刷新", command=self._refresh_list,
-                               style="AnimeSecondary.TButton")
+        btn_refresh = AnimeStyle.create_button(
+            toolbar, text="🔄 刷新", command=self._refresh_list, style_type="secondary"
+        )
         btn_refresh.pack(side=tk.LEFT, padx=5)
         
-        btn_delete = ttk.Button(toolbar, text="🗑️ 删除选中", command=self._on_delete_selected,
-                              style="AnimeSecondary.TButton")
+        btn_delete = AnimeStyle.create_button(
+            toolbar, text="🗑️ 删除选中", command=self._on_delete_selected, style_type="secondary"
+        )
         btn_delete.pack(side=tk.LEFT, padx=5)
         
         # 记录列表
@@ -560,12 +607,14 @@ class LedgerApp(tk.Tk):
         threshold_entry.pack(fill=tk.X, **pad)
         
         # 按钮
-        btn_set = ttk.Button(left_frame, text="💾 设置预算", command=self._on_set_budget,
-                           style="Anime.TButton")
+        btn_set = AnimeStyle.create_button(
+            left_frame, text="💾 设置预算", command=self._on_set_budget, style_type="primary"
+        )
         btn_set.pack(pady=15, fill=tk.X)
         
-        btn_progress = ttk.Button(left_frame, text="📊 查看进度", command=self._on_budget_progress,
-                                style="AnimeSecondary.TButton")
+        btn_progress = AnimeStyle.create_button(
+            left_frame, text="📊 查看进度", command=self._on_budget_progress, style_type="secondary"
+        )
         btn_progress.pack(pady=5, fill=tk.X)
         
         # 右侧进度显示区域
@@ -671,8 +720,9 @@ class LedgerApp(tk.Tk):
         self.var_stats_end = tk.StringVar(value=date.today().isoformat())
         ttk.Entry(control_frame, textvariable=self.var_stats_end, style="Anime.TEntry", width=12).pack(side=tk.LEFT, padx=5)
         
-        ttk.Button(control_frame, text="📊 查询", command=self._on_stats_query,
-                  style="Anime.TButton").pack(side=tk.LEFT, padx=10)
+        AnimeStyle.create_button(
+            control_frame, text="📊 查询", command=self._on_stats_query, style_type="primary"
+        ).pack(side=tk.LEFT, padx=10)
         
         # 结果显示区域
         result_frame = ttk.Frame(parent)
@@ -775,8 +825,9 @@ class LedgerApp(tk.Tk):
                        style="Anime.TLabel").pack(side=tk.LEFT, padx=5)
         
         # 搜索按钮
-        ttk.Button(search_frame, text="🔍 搜索", command=self._on_search,
-                  style="Anime.TButton").grid(row=4, column=0, columnspan=2, pady=10)
+        AnimeStyle.create_button(
+            search_frame, text="🔍 搜索", command=self._on_search, style_type="primary"
+        ).grid(row=4, column=0, columnspan=2, pady=10)
         
         # 结果区域
         result_frame = ttk.Frame(parent)
@@ -861,10 +912,12 @@ class LedgerApp(tk.Tk):
         
         self.var_new_category = tk.StringVar()
         ttk.Entry(entry_frame, textvariable=self.var_new_category, style="Anime.TEntry", width=20).pack(fill=tk.X, pady=5)
-        ttk.Button(entry_frame, text="➕ 添加", command=self._on_add_category,
-                  style="Anime.TButton").pack(fill=tk.X, pady=5)
-        ttk.Button(entry_frame, text="🗑️ 删除选中", command=self._on_delete_category,
-                  style="AnimeSecondary.TButton").pack(fill=tk.X, pady=5)
+        AnimeStyle.create_button(
+            entry_frame, text="➕ 添加", command=self._on_add_category, style_type="primary"
+        ).pack(fill=tk.X, pady=5)
+        AnimeStyle.create_button(
+            entry_frame, text="🗑️ 删除选中", command=self._on_delete_category, style_type="secondary"
+        ).pack(fill=tk.X, pady=5)
         
         self._refresh_categories()
     
@@ -901,6 +954,58 @@ class LedgerApp(tk.Tk):
                 self._show_success("分类已删除")
         except Exception as exc:
             self._show_error(f"删除失败: {exc}")
+    
+    # --- 背景绘制 ---
+    def _draw_background(self, event=None) -> None:
+        """绘制淡紫-粉渐变背景 + 点缀光斑"""
+        width = self.bg_canvas.winfo_width()
+        height = self.bg_canvas.winfo_height()
+        if width <= 0 or height <= 0:
+            return
+        self.bg_canvas.delete("gradient")
+        steps = 80
+        for i in range(steps):
+            ratio = i / steps
+            color = self._interpolate_color(
+                AnimeTheme.BG_GRADIENT_START, AnimeTheme.BG_GRADIENT_END, ratio
+            )
+            y0 = int(height * ratio)
+            y1 = int(height * (i + 1) / steps)
+            self.bg_canvas.create_rectangle(
+                0, y0, width, y1, fill=color, outline="", tags="gradient"
+            )
+        # 添加柔光圆形点缀
+        self.bg_canvas.create_oval(
+            width * 0.6,
+            height * 0.1,
+            width * 0.95,
+            height * 0.45,
+            fill="#FFFFFF20",
+            outline="",
+            tags="gradient",
+        )
+        self.bg_canvas.create_oval(
+            width * 0.05,
+            height * 0.6,
+            width * 0.4,
+            height * 0.95,
+            fill="#FAD7FF30",
+            outline="",
+            tags="gradient",
+        )
+    
+    @staticmethod
+    def _interpolate_color(start_hex: str, end_hex: str, ratio: float) -> str:
+        """线性插值颜色"""
+        ratio = max(0.0, min(1.0, ratio))
+        s = int(start_hex[1:], 16)
+        e = int(end_hex[1:], 16)
+        r1, g1, b1 = (s >> 16) & 0xFF, (s >> 8) & 0xFF, s & 0xFF
+        r2, g2, b2 = (e >> 16) & 0xFF, (e >> 8) & 0xFF, e & 0xFF
+        r = int(r1 + (r2 - r1) * ratio)
+        g = int(g1 + (g2 - g1) * ratio)
+        b = int(b1 + (b2 - b1) * ratio)
+        return f"#{r:02X}{g:02X}{b:02X}"
     
     # --- Custom Message Boxes (二次元风格弹窗) ---
     def _show_success(self, message: str) -> None:
