@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 
 @dataclass
@@ -72,5 +72,3 @@ def month_from_date(d: date) -> str:
 def parse_yyyy_mm(s: str) -> Tuple[int, int]:
     year, month = s.split("-")
     return int(year), int(month)
-
-

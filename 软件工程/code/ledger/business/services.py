@@ -28,6 +28,7 @@ class RecordService:
         self._categories = CategoryRepository()
         self._methods = PaymentMethodRepository()
 
+    # pylint: disable=R0913
     def add_record(
         self,
         *,
@@ -51,6 +52,7 @@ class RecordService:
             note=note,
         )
 
+    # pylint: disable=R0913
     def update_record(
         self,
         record_id: int,
