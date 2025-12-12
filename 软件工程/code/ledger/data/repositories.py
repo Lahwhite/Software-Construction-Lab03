@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, UTC
 from typing import List, Optional, Tuple
 
 from .database import db_cursor
@@ -61,7 +61,7 @@ class RecordRepository:
         category_id: Optional[int],
         note: str,
     ) -> Record:
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(UTC).isoformat()
         with db_cursor() as cur:
             cur.execute(
                 """
@@ -117,14 +117,14 @@ class RecordRepository:
         if payment_method_id is not None:
             fields.append("payment_method_id = ?")
             params.append(payment_method_id)
-        if category_id is not None:
-            fields.append("category_id = ?")
-            params.append(category_id)
+        # 总是更新category_id，包括设置为None的情况
+        fields.append("category_id = ?")
+        params.append(category_id)
         if note is not None:
             fields.append("note = ?")
             params.append(note)
         fields.append("updated_at = ?")
-        params.append(datetime.utcnow().isoformat())
+        params.append(datetime.now(UTC).isoformat())
         params.append(record_id)
         if not fields:
             return

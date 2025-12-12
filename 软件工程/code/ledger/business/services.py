@@ -59,11 +59,11 @@ class RecordService:
         amount: Optional[float] = None,
         date_: Optional[date] = None,
         payment_method: Optional[str] = None,
-        category: Optional[Optional[str]] = None,
+        category: Optional[str] = None,
         note: Optional[str] = None,
     ) -> None:
         payment_method_id = None
-        category_id: Optional[Optional[int]] = None
+        category_id: Optional[int] = None
         if payment_method is not None:
             payment_method_id = self._methods.get_or_create(payment_method).id
         if category is not None:
