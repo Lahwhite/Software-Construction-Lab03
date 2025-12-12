@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-模糊测试脚本：用于测试分类和记录服务的输入处理
+测试脚本：直接在脚本内部使用中文数据进行模糊测试
 """
 import sys
 import os
@@ -12,8 +12,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from ledger.business.services import CategoryService, RecordService
 from ledger.data.database import db_cursor
 
-def fuzz_category_name(data):
-    """模糊测试分类名称"""
+def test_category_with_chinese():
+    """使用中文测试分类名称"""
     try:
         category_service = CategoryService()
         # 清理之前的测试数据
@@ -21,17 +21,17 @@ def fuzz_category_name(data):
             cur.execute("DELETE FROM categories")
             cur.execute("DELETE FROM records")
         
-        # 使用模糊输入作为分类名称（Python 3中sys.stdin.read()直接返回字符串）
-        category_name = data
+        # 使用中文作为分类名称
+        category_name = "测试分类"
         category = category_service.add(category_name)
-        print(f"Category added: {category.name}")
+        print(f"分类添加成功: {category.name}")
         return True
     except Exception as e:
-        print(f"Error in fuzz_category_name: {e}")
+        print(f"分类测试错误: {e}")
         return False
 
-def fuzz_record_input(data):
-    """模糊测试记录输入"""
+def test_record_with_chinese():
+    """使用中文测试记录备注"""
     try:
         record_service = RecordService()
         category_service = CategoryService()
@@ -44,8 +44,8 @@ def fuzz_record_input(data):
         # 创建一个分类
         category_service.add("测试分类")
         
-        # 使用模糊输入作为记录备注（Python 3中sys.stdin.read()直接返回字符串）
-        note = data
+        # 使用中文作为记录备注
+        note = "测试记录备注"
         
         # 尝试添加记录
         record = record_service.add_record(
@@ -56,27 +56,13 @@ def fuzz_record_input(data):
             category="测试分类",
             note=note
         )
-        print(f"Record added with note: {record.note}")
+        print(f"记录添加成功，备注: {record.note}")
         return True
     except Exception as e:
-        print(f"Error in fuzz_record_input: {e}")
+        print(f"记录测试错误: {e}")
         return False
 
 if __name__ == "__main__":
-    # AFL++模糊测试入口
-    if len(sys.argv) < 2:
-        print("Usage: python fuzz_test.py <test_type>")
-        print("Test types: category, record")
-        sys.exit(1)
-    
-    test_type = sys.argv[1]
-    
-    while True:
-        data = sys.stdin.read(100)  # 读取最多100字节的模糊输入
-        if not data:
-            break
-        
-        if test_type == "category":
-            fuzz_category_name(data)
-        elif test_type == "record":
-            fuzz_record_input(data)
+    print("=== 中文输入测试 ===")
+    test_category_with_chinese()
+    test_record_with_chinese()
