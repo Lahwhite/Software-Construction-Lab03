@@ -43,11 +43,14 @@ class RecordService:
         category_id = None
         if category:
             category_id = self._categories.get_or_create(category).id
+        # 确保method.id不为None，否则抛出异常
+        if method.id is None:
+            raise ValueError(f"Payment method '{payment_method}' has no ID")
         return self._records.create(
             type_=type_,
             amount=amount,
             date_=date_,
-            payment_method_id=method.id or 0,
+            payment_method_id=method.id,
             category_id=category_id,
             note=note,
         )

@@ -27,8 +27,12 @@ class CategoryRepository:
     def list(self) -> List[Category]:
         """获取所有分类"""
         with db_cursor() as c:
-            c.execute("SELECT id, name FROM categories")
+            c.execute("SELECT id, name FROM categories ORDER BY name")
             return [Category(id=r["id"], name=r["name"]) for r in c.fetchall()]
+
+    def list_all(self) -> List[Category]:
+        """获取所有分类"""
+        return self.list()
 
     def get_by_name(self, name: str) -> Optional[Category]:
         """根据名称获取分类"""
@@ -47,6 +51,18 @@ class CategoryRepository:
             if r:
                 return Category(id=r["id"], name=r["name"])
             return None
+
+    def delete(self, id_: int) -> None:
+        """删除分类"""
+        with db_cursor() as c:
+            c.execute("DELETE FROM categories WHERE id = ?", (id_,))
+
+    def get_or_create(self, name: str) -> Category:
+        """获取或创建分类"""
+        category = self.get_by_name(name)
+        if category:
+            return category
+        return self.add(name)
 
 
 class PaymentMethodRepository:
@@ -81,6 +97,13 @@ class PaymentMethodRepository:
             if r:
                 return PaymentMethod(id=r["id"], name=r["name"])
             return None
+
+    def get_or_create(self, name: str) -> PaymentMethod:
+        """获取或创建支付方式"""
+        payment_method = self.get_by_name(name)
+        if payment_method:
+            return payment_method
+        return self.add(name)
 
 
 class RecordRepository:
@@ -226,6 +249,10 @@ class RecordRepository:
         with db_cursor() as c:
             c.execute("DELETE FROM records WHERE id = ?", (record_id,))
 
+    def delete(self, record_id: int) -> None:
+        """删除记录（别名方法）"""
+        self.delete_record(record_id)
+
     def list_recent(self, limit: int = 20) -> List[Record]:
         """获取最近的记录"""
         with db_cursor() as c:
@@ -234,6 +261,89 @@ class RecordRepository:
                 (limit,),
             )
             return [self._row_to_record(r) for r in c.fetchall()]
+
+    def create(
+        self,
+        type_: str,
+        amount: float,
+        date_: date,
+        payment_method_id: int,
+        category_id: Optional[int],
+        note: str,
+    ) -> Record:
+        """创建记录"""
+        record_id = None
+        with db_cursor() as c:
+            now = datetime.now(timezone.utc)
+            c.execute(
+                """
+                INSERT INTO records (
+                    type, amount, date, payment_method_id, category_id, note, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    type_,
+                    amount,
+                    date_,
+                    payment_method_id,
+                    category_id,
+                    note,
+                    now,
+                    now,
+                ),
+            )
+            record_id = c.lastrowid
+        # 事务已提交，现在可以查询到记录
+        return self.get_by_id(record_id)
+
+    # pylint: disable=R0913
+    # 忽略too-many-arguments警告
+    def update(
+        self,
+        record_id: int,
+        *,  # 强制使用关键字参数
+        type_: Optional[str] = None,
+        amount: Optional[float] = None,
+        date_: Optional[date] = None,
+        payment_method_id: Optional[int] = None,
+        category_id: Optional[int] = None,
+        note: Optional[str] = None,
+    ) -> None:
+        """更新记录"""
+        with db_cursor() as c:
+            updates = []
+            params = []
+
+            if type_ is not None:
+                updates.append("type = ?")
+                params.append(type_)
+            if amount is not None:
+                updates.append("amount = ?")
+                params.append(amount)
+            if date_ is not None:
+                updates.append("date = ?")
+                params.append(date_)
+            if payment_method_id is not None:
+                updates.append("payment_method_id = ?")
+                params.append(payment_method_id)
+            # 处理category_id参数，无论它是None还是有值
+            if category_id is not None:
+                updates.append("category_id = ?")
+                params.append(category_id)
+            elif category_id is None:
+                updates.append("category_id = NULL")
+            if note is not None:
+                updates.append("note = ?")
+                params.append(note)
+
+            # 添加更新时间
+            updates.append("updated_at = ?")
+            params.append(datetime.now(timezone.utc))
+            params.append(record_id)
+
+            if updates:
+                sql = f"UPDATE records SET {', '.join(updates)} WHERE id = ?"
+                c.execute(sql, params)
 
     # pylint: disable=R0913
     # 忽略too-many-arguments警告
@@ -305,88 +415,31 @@ class RecordRepository:
         with db_cursor() as c:
             c.execute("SELECT * FROM records WHERE id = ?", (id_,))
             r = c.fetchone()
+            if r is None:
+                raise ValueError(f"Record with id {id_} not found")
             return self._row_to_record(r)
 
     @staticmethod
     def _row_to_record(r) -> Record:
         """将数据库行转换为记录对象"""
+        from datetime import date, datetime, timezone
+        # 将字符串转换为日期对象
+        record_date = date.fromisoformat(r["date"]) if isinstance(r["date"], str) else r["date"]
+        # 将字符串转换为datetime对象
+        created_at = datetime.fromisoformat(r["created_at"].replace('+00:00', 'Z')).astimezone(timezone.utc) if isinstance(r["created_at"], str) else r["created_at"]
+        updated_at = datetime.fromisoformat(r["updated_at"].replace('+00:00', 'Z')).astimezone(timezone.utc) if isinstance(r["updated_at"], str) else r["updated_at"]
+        
         return Record(
             id=r["id"],
             type=r["type"],
             amount=r["amount"],
-            date=r["date"],
+            date=record_date,
             payment_method_id=r["payment_method_id"],
             category_id=r["category_id"],
             note=r["note"],
-            created_at=r["created_at"],
-            updated_at=r["updated_at"],
+            created_at=created_at,
+            updated_at=updated_at,
         )
-
-    def create(self, record: Record) -> Record:
-        """创建记录"""
-        with db_cursor() as c:
-            now = datetime.now(timezone.utc)
-            c.execute(
-                """
-                INSERT INTO records (
-                    type, amount, date, payment_method_id, category_id, note, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    record.type,
-                    record.amount,
-                    record.date,
-                    record.payment_method_id,
-                    record.category_id,
-                    record.note,
-                    now,
-                    now,
-                ),
-            )
-            return self.get_by_id(c.lastrowid)
-
-    # pylint: disable=R0913
-    # 忽略too-many-arguments警告
-    def update(
-        self,
-        id_: int,
-        type_: Optional[str] = None,
-        amount: Optional[float] = None,
-        date_: Optional[date] = None,
-        payment_method_id: Optional[int] = None,
-        category_id: Optional[int] = None,
-        note: Optional[str] = None,
-    ) -> None:
-        """更新记录"""
-        with db_cursor() as c:
-            updates = []
-            params = []
-
-            if type_ is not None:
-                updates.append("type = ?")
-                params.append(type_)
-            if amount is not None:
-                updates.append("amount = ?")
-                params.append(amount)
-            if date_ is not None:
-                updates.append("date = ?")
-                params.append(date_)
-            if payment_method_id is not None:
-                updates.append("payment_method_id = ?")
-                params.append(payment_method_id)
-            if category_id is not None:
-                updates.append("category_id = ?")
-                params.append(category_id)
-            if note is not None:
-                updates.append("note = ?")
-                params.append(note)
-
-            updates.append("updated_at = ?")
-            params.append(datetime.now(timezone.utc))
-            params.append(id_)
-
-            sql = f"UPDATE records SET {', '.join(updates)} WHERE id = ?"
-            c.execute(sql, params)
 
     def delete(self, id_: int) -> None:
         """删除记录"""
