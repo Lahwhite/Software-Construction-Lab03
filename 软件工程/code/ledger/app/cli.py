@@ -90,8 +90,8 @@ def list_records(limit: int) -> None:
     svc = RecordService()
     rows = svc.list_recent(limit=limit)
     table = [
-        (r.id, r.type, r.amount, r.date.isoformat(),
-         r.payment_method_id, r.category_id, r.note)
+        (r.id, r.type, r.financials.amount, r.date.isoformat(),
+         r.financials.payment_method_id, r.financials.category_id, r.note)
         for r in rows
     ]
     click.echo(tabulate(table, headers=["ID", "??", "??", "??", "????", "??", "??"]))
@@ -185,8 +185,8 @@ def search(min_amount: Optional[float], max_amount: Optional[float],
         limit=200,
     )
     table = [
-        (r.id, r.type, r.amount, r.date.isoformat(),
-         r.payment_method_id, r.category_id, r.note)
+        (r.id, r.type, r.financials.amount, r.date.isoformat(),
+         r.financials.payment_method_id, r.financials.category_id, r.note)
         for r in rows
     ]
     click.echo(tabulate(table, headers=["ID", "??", "??", "??", "????", "??", "??"]))
