@@ -15,3 +15,7 @@ max-statements=100    # Increase from default 50
 
 [FORMAT]
 max-line-length=120   # Increase from default 100
+
+[ledger.app.cli]
+disable=
+    E0401  # import-error
