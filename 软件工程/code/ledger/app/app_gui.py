@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
+"""Ledger应用程序的GUI界面实现。
+
+该模块提供了记账本应用的图形用户界面，包括记录管理、预算管理、统计分析等功能。
+使用tkinter库构建，采用了模块化的设计，支持主题切换和响应式布局。
+"""
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 from datetime import date, timedelta
+import tkinter as tk
+from tkinter import ttk
 
 # ????????Python???????????ledger??
 _here = Path(__file__).resolve()
@@ -12,9 +19,6 @@ _repo_root = _package_dir.parent  # code/ ??
 for path in (_package_dir, _repo_root):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
-
-import tkinter as tk
-from tkinter import ttk
 
 from ledger.data.database import migrate
 from ledger.business.services import BudgetService, CategoryService, RecordService
@@ -26,7 +30,16 @@ from ledger.ui.views import home_view, record_view
 
 
 class LedgerApp(tk.Tk):
+    """记账本应用程序的主窗口类。
+    
+    该类是整个记账本应用的核心，负责创建主窗口、初始化各种服务和组件、
+    构建用户界面，并处理用户交互。
+    """
     def __init__(self) -> None:
+        """初始化应用程序。
+        
+        设置窗口属性、初始化服务和组件、构建用户界面。
+        """
         super().__init__()
         self.title("次元记账")
         self.geometry("1000x700")
@@ -82,7 +95,10 @@ class LedgerApp(tk.Tk):
         self.refresh_home()
 
     def refresh_home(self) -> None:
-        """刷新首页数据"""
+        """刷新首页数据。
+        
+        更新首页显示的本月收支、预算进度和最近记录等信息。
+        """
         try:
             # 计算本月收支
             today = date.today()
@@ -133,10 +149,10 @@ class LedgerApp(tk.Tk):
 
                 # 文字
                 self.home_budget_text.config(
-                    text=f"已用: ¥{used:.2f} / 总预算 ¥{total:.2f} ({ratio:.1%})" +
-                    (" ⚠️ 预警" if ratio >= threshold and total > 0 else "")
+                    text=(f"已用: ¥{used:.2f} / 总预算 ¥{total:.2f} ({ratio:.1%})"
+                          + (" ⚠️ 预警" if ratio >= threshold and total > 0 else ""))
                 )
-            except Exception:
+            except (ValueError, TypeError, RuntimeError):
                 self.home_budget_text.config(text="未设置预算")
 
             # 更新最近记录
@@ -144,7 +160,6 @@ class LedgerApp(tk.Tk):
 
             recent_records = self.record_service.list_recent(limit=10)
             id_to_cat = {c.id: c.name for c in self.category_repo.list_all()}
-            id_to_method = {m.id: m.name for m in self.method_repo.list_all()}
 
             for r in recent_records:
                 cat_name = id_to_cat.get(r.category_id, "未分类") if r.category_id else "未分类"
@@ -157,6 +172,10 @@ class LedgerApp(tk.Tk):
             show_error(f"刷新首页数据失败: {exc}")
 
     def add_record(self) -> None:
+        """添加新的记录。
+        
+        从用户输入中获取记录信息，验证后添加到数据库，并更新相关界面。
+        """
         try:
             type_ = self.var_type.get()
             amount = float(self.var_amount.get())
@@ -178,10 +197,14 @@ class LedgerApp(tk.Tk):
             self.var_note.set("记录具体场景吧～")
             self.refresh_records()
             self.refresh_home()
-        except Exception as exc:
+        except (ValueError, TypeError) as exc:
             show_error(f"添加失败: {exc}")
 
     def refresh_records(self) -> None:
+        """刷新记录列表。
+        
+        更新记录列表中的数据，显示最新的记录信息。
+        """
         tree = getattr(self, "records_tree", None)
         if not tree:
             return
@@ -201,6 +224,10 @@ class LedgerApp(tk.Tk):
             ))
 
     def delete_selected_records(self) -> None:
+        """删除选中的记录。
+        
+        从记录列表中删除用户选中的记录，并更新相关界面。
+        """
         tree = getattr(self, "records_tree", None)
         if not tree:
             return
@@ -218,11 +245,16 @@ class LedgerApp(tk.Tk):
                 self.refresh_records()
                 self.refresh_home()
                 show_success("已删除选中记录")
-            except Exception as exc:
+            except (ValueError, TypeError) as exc:
                 show_error(f"删除失败: {exc}")
 
     # --- Budget Page ---
     def _build_budget_page(self, parent: ttk.Frame) -> None:
+        """构建预算管理界面。
+        
+        Args:
+            parent: 父容器组件
+        """
         # 左侧设置区域
         left_frame = ttk.Frame(parent)
         left_frame.pack(side=tk.LEFT, fill=tk.BOTH, padx=10, pady=10)
@@ -278,6 +310,10 @@ class LedgerApp(tk.Tk):
         self.budget_progress_text.pack(fill=tk.BOTH, expand=True, pady=(10, 0))
 
     def _on_set_budget(self) -> None:
+        """设置预算。
+        
+        从用户输入中获取预算信息，保存到数据库，并更新预算界面。
+        """
         try:
             month = self.var_month.get().strip()
             total = float(self.var_total.get())
@@ -285,10 +321,14 @@ class LedgerApp(tk.Tk):
             self.budget_service.set_budget(month, total, threshold)
             show_success("预算已设置")
             self._on_budget_progress()
-        except Exception as exc:
-            show_error(f"设置失败: {exc}")
+        except (ValueError, TypeError) as exc:
+            show_error(f"设置预算失败: {exc}")
 
     def _on_budget_progress(self) -> None:
+        """查看预算进度。
+        
+        获取指定月份的预算使用情况，并在界面上显示。
+        """
         try:
             month = self.var_month.get().strip()
             p = self.budget_service.progress(month)
@@ -299,25 +339,31 @@ class LedgerApp(tk.Tk):
             height = 60
 
             # 背景
-            self.budget_progress_canvas.create_rectangle(10, 10, width - 10, height - 10,
-                                                        fill=AnimeTheme.BG_MAIN,
-                                                        outline=AnimeTheme.PRIMARY_PINK, width=2)
+            self.budget_progress_canvas.create_rectangle(
+                10, 10, width - 10, height - 10,
+                fill=AnimeTheme.BG_MAIN,
+                outline=AnimeTheme.PRIMARY_PINK, width=2
+            )
 
             # 进度?
             ratio = min(p.usage_ratio, 1.0)
             progress_width = 10 + int((width - 20) * ratio)
             progress_color = AnimeTheme.EXPENSE_RED if ratio >= p.threshold else AnimeTheme.PRIMARY_BLUE
-            self.budget_progress_canvas.create_rectangle(12, 12, progress_width - 2, height - 12,
-                                                        fill=progress_color, outline="")
+            self.budget_progress_canvas.create_rectangle(
+                12, 12, progress_width - 2, height - 12,
+                fill=progress_color, outline=""
+            )
 
             # 文字
             text = f"总预算 ¥{p.total_budget:.2f} | 已用: ¥{p.total_expense:.2f} ({p.usage_ratio:.1%})"
             if p.total_budget > 0 and p.usage_ratio >= p.threshold:
                 text += " ⚠️ 预警"
-            self.budget_progress_canvas.create_text(width // 2, height // 2,
-                                                   text=text,
-                                                   font=("Microsoft YaHei UI", 11, "bold"),
-                                                   fill=AnimeTheme.TEXT_DARK)
+            self.budget_progress_canvas.create_text(
+                width // 2, height // 2,
+                text=text,
+                font=("Microsoft YaHei UI", 11, "bold"),
+                fill=AnimeTheme.TEXT_DARK
+            )
 
             # 文本显示
             lines = [
@@ -339,11 +385,16 @@ class LedgerApp(tk.Tk):
 
             self.budget_progress_text.delete("1.0", tk.END)
             self.budget_progress_text.insert(tk.END, "\n".join(lines))
-        except Exception as exc:
-            show_error(f"查看进度失败: {exc}")
+        except (ValueError, TypeError) as exc:
+            show_error(f"查询预算进度失败: {exc}")
 
     # --- Stats Page ---
     def _build_stats_page(self, parent: ttk.Frame) -> None:
+        """构建统计分析界面。
+        
+        Args:
+            parent: 父容器组件
+        """
         # 顶部控制区域
         control_frame = ttk.Frame(parent)
         control_frame.pack(fill=tk.X, padx=10, pady=10)
@@ -389,6 +440,10 @@ class LedgerApp(tk.Tk):
         self.stats_summary.pack(pady=10)
 
     def _on_stats_query(self) -> None:
+        """查询统计数据。
+        
+        根据用户选择的维度和日期范围，查询统计数据并显示在界面上。
+        """
         try:
             dimension = self.var_stats_dimension.get()
             start = date.fromisoformat(self.var_stats_start.get())
@@ -415,13 +470,19 @@ class LedgerApp(tk.Tk):
 
             # 显示汇?
             self.stats_summary.config(
-                text=f"💰 总收? ¥{result.total_income:.2f} | 💸 总支? ¥{result.total_expense:.2f}"
+                text=f"💰 总收? ¥{result.total_income:.2f} | "
+                f"💸 总支? ¥{result.total_expense:.2f}"
             )
-        except Exception as exc:
-            show_error(f"查询失败: {exc}")
+        except (ValueError, TypeError) as exc:
+            show_error(f"统计查询失败: {exc}")
 
     # --- Search Page ---
     def _build_search_page(self, parent: ttk.Frame) -> None:
+        """构建搜索界面。
+        
+        Args:
+            parent: 父容器组件
+        """
         # 搜索条件区域
         search_frame = ttk.LabelFrame(parent, text="🔍 搜索条件", padding=15)
         search_frame.pack(fill=tk.X, padx=10, pady=10)
@@ -431,7 +492,10 @@ class LedgerApp(tk.Tk):
         # 关键词
         ttk.Label(search_frame, text="关键词", style="Anime.TLabel").grid(row=0, column=0, sticky=tk.W, **pad)
         self.var_search_keyword = tk.StringVar()
-        ttk.Entry(search_frame, textvariable=self.var_search_keyword, style="Anime.TEntry", width=30).grid(row=0, column=1, **pad)
+        ttk.Entry(
+            search_frame, textvariable=self.var_search_keyword, 
+            style="Anime.TEntry", width=30
+        ).grid(row=0, column=1, **pad)
 
         # 金额范围
         ttk.Label(search_frame, text="金额范围", style="Anime.TLabel").grid(row=1, column=0, sticky=tk.W, **pad)
@@ -458,12 +522,18 @@ class LedgerApp(tk.Tk):
         self.var_search_type = tk.StringVar(value="")
         type_frame = ttk.Frame(search_frame)
         type_frame.grid(row=3, column=1, sticky=tk.W, **pad)
-        ttk.Radiobutton(type_frame, text="全部", variable=self.var_search_type, value="",
-                       style="Anime.TLabel").pack(side=tk.LEFT, padx=5)
-        ttk.Radiobutton(type_frame, text="收入", variable=self.var_search_type, value="income",
-                       style="Anime.TLabel").pack(side=tk.LEFT, padx=5)
-        ttk.Radiobutton(type_frame, text="支出", variable=self.var_search_type, value="expense",
-                       style="Anime.TLabel").pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(
+            type_frame, text="全部", variable=self.var_search_type, value="",
+            style="Anime.TLabel"
+        ).pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(
+            type_frame, text="收入", variable=self.var_search_type, value="income",
+            style="Anime.TLabel"
+        ).pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(
+            type_frame, text="支出", variable=self.var_search_type, value="expense",
+            style="Anime.TLabel"
+        ).pack(side=tk.LEFT, padx=5)
 
         # 搜索按钮
         create_button(search_frame, "🔍 搜索", self._on_search).grid(row=4, column=0, columnspan=2, pady=10)
@@ -492,6 +562,10 @@ class LedgerApp(tk.Tk):
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
     def _on_search(self) -> None:
+        """执行搜索。
+        
+        根据用户输入的搜索条件，查询记录并显示在界面上。
+        """
         try:
             keyword = self.var_search_keyword.get().strip() or None
             min_amount = float(self.var_search_min.get()) if self.var_search_min.get() else None
@@ -524,11 +598,16 @@ class LedgerApp(tk.Tk):
                 ))
 
             show_success(f"找到 {len(records)} 条记录")
-        except Exception as exc:
+        except (ValueError, TypeError) as exc:
             show_error(f"搜索失败: {exc}")
 
     # --- Category Page ---
     def _build_category_page(self, parent: ttk.Frame) -> None:
+        """构建分类管理界面。
+        
+        Args:
+            parent: 父容器组件
+        """
         left = ttk.Frame(parent)
         left.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=10)
 
@@ -539,10 +618,12 @@ class LedgerApp(tk.Tk):
         title = ttk.Label(left, text="📁 支出分类", style="AnimeTitle.TLabel")
         title.pack(pady=(0, 10))
 
-        self.listbox_categories = tk.Listbox(left, font=("Microsoft YaHei UI", 11),
-                                            bg=AnimeTheme.BG_CARD, fg=AnimeTheme.TEXT_DARK,
-                                            selectbackground=AnimeTheme.PRIMARY_BLUE,
-                                            relief=tk.FLAT, bd=2)
+        self.listbox_categories = tk.Listbox(
+            left, font=("Microsoft YaHei UI", 11),
+            bg=AnimeTheme.BG_CARD, fg=AnimeTheme.TEXT_DARK,
+            selectbackground=AnimeTheme.PRIMARY_BLUE,
+            relief=tk.FLAT, bd=2
+        )
         self.listbox_categories.pack(fill=tk.BOTH, expand=True)
 
         # 操作区域
@@ -557,12 +638,20 @@ class LedgerApp(tk.Tk):
         self._refresh_categories()
 
     def _refresh_categories(self) -> None:
+        """刷新分类列表。
+        
+        更新分类管理界面中显示的分类列表。
+        """
         self.listbox_categories.delete(0, tk.END)
         cats = self.category_service.list()
         for c in cats:
             self.listbox_categories.insert(tk.END, f"{c.id}: {c.name}")
 
     def _on_add_category(self) -> None:
+        """添加新分类。
+        
+        从用户输入中获取分类名称，添加到数据库，并更新分类列表。
+        """
         name = (self.var_new_category.get() or "").strip()
         if not name:
             show_info("请输入分类名称")
@@ -572,10 +661,14 @@ class LedgerApp(tk.Tk):
             self.var_new_category.set("")
             self._refresh_categories()
             show_success("分类已添加")
-        except Exception as exc:
-            show_error(f"添加失败: {exc}")
+        except (ValueError, TypeError) as exc:
+            show_error(f"添加分类失败: {exc}")
 
     def _on_delete_category(self) -> None:
+        """删除选中的分类。
+        
+        从分类列表中删除用户选中的分类，并更新相关界面。
+        """
         sel = self.listbox_categories.curselection()
         if not sel:
             show_info("请先选择要删除的分类")
@@ -587,8 +680,8 @@ class LedgerApp(tk.Tk):
                 self.category_service.delete(cid)
                 self._refresh_categories()
                 show_success("分类已删除")
-        except Exception as exc:
-            show_error(f"删除失败: {exc}")
+        except (ValueError, TypeError) as exc:
+            show_error(f"删除分类失败: {exc}")
 
 def main() -> None:
     app = LedgerApp()

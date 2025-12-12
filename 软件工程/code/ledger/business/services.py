@@ -236,7 +236,7 @@ class BudgetService:
         """
         # 确保预算存在
         budget = self.set_budget(month, 0.0, 0.8)  # 如果不存在，创建一个临时预算
-        
+
         # 获取分类ID
         category_service = CategoryService()
         category_obj = category_service.add(category)  # 获取或创建分类
@@ -271,12 +271,12 @@ class BudgetService:
         # 获取该月份的所有支出记录
         record_service = RecordService()
         records = record_service.search(
-            min_amount=None, 
-            max_amount=None, 
-            start=None, 
-            end=None, 
-            keyword=None, 
-            type_="expense", 
+            min_amount=None,
+            max_amount=None,
+            start=None,
+            end=None,
+            keyword=None,
+            type_="expense",
             limit=None
         )
         
