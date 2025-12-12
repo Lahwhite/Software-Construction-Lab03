@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 from datetime import date, timedelta
 import tkinter as tk
+import sqlite3
 from tkinter import ttk
 
 # 设置Python路径以便导入ledger模块
@@ -159,19 +160,23 @@ class LedgerApp(tk.Tk):
             # 更新最近记录
             self.recent_tree.delete(*self.recent_tree.get_children())
 
-            recent_records = self.record_service.list_recent(limit=10)
-            id_to_cat = {c.id: c.name for c in self.category_repo.list_all()}
+            try:
+                recent_records = self.record_service.list_recent(limit=10)
+                id_to_cat = {c.id: c.name for c in self.category_repo.list_all()}
 
-            for r in recent_records:
-                cat_name = id_to_cat.get(r.category_id, "未分类") if r.category_id else "未分类"
-                amount_str = f"¥{r.amount:.2f}"
-                type_str = "收入" if r.type == "income" else "支出"
-                self.recent_tree.insert("", tk.END, values=(
-                    amount_str, type_str, cat_name, r.date.isoformat(), r.note or ""
-                ))
-        except Exception as exc:
+                for r in recent_records:
+                    cat_name = id_to_cat.get(r.category_id, "未分类") if r.category_id else "未分类"
+                    amount_str = f"¥{r.amount:.2f}"
+                    type_str = "收入" if r.type == "income" else "支出"
+                    self.recent_tree.insert("", tk.END, values=(
+                        amount_str, type_str, cat_name, r.date.isoformat(), r.note or ""
+                    ))
+            except (sqlite3.Error, ValueError, TypeError) as exc:
+                show_error(f"刷新最近记录失败: {exc}")
+                # 捕获数据库操作和数据转换相关的具体异常
+        except (sqlite3.Error, ValueError, TypeError, RuntimeError) as exc:
             show_error(f"刷新首页数据失败: {exc}")
-            # 注意：这里暂时保留了广泛的异常捕获以确保应用稳定性，但在生产环境中应该使用更具体的异常类型
+            # 捕获可能的具体异常类型，确保应用稳定性
 
     def add_record(self) -> None:
         """添加新的记录。
@@ -270,21 +275,36 @@ class LedgerApp(tk.Tk):
         month_label = ttk.Label(left_frame, text="月份 (YYYY-MM)", style="Anime.TLabel")
         month_label.pack(anchor=tk.W, **pad)
         self.var_month = tk.StringVar(value=date.today().strftime("%Y-%m"))
-        month_entry = ttk.Entry(left_frame, textvariable=self.var_month, style="Anime.TEntry", width=25)
+        month_entry = ttk.Entry(
+            left_frame, 
+            textvariable=self.var_month, 
+            style="Anime.TEntry", 
+            width=25
+        )
         month_entry.pack(fill=tk.X, **pad)
 
         # 总预算
         total_label = ttk.Label(left_frame, text="总预算", style="Anime.TLabel")
         total_label.pack(anchor=tk.W, **pad)
         self.var_total = tk.StringVar(value="3000")
-        total_entry = ttk.Entry(left_frame, textvariable=self.var_total, style="Anime.TEntry", width=25)
+        total_entry = ttk.Entry(
+            left_frame, 
+            textvariable=self.var_total, 
+            style="Anime.TEntry", 
+            width=25
+        )
         total_entry.pack(fill=tk.X, **pad)
 
         # 阈值
         threshold_label = ttk.Label(left_frame, text="预警阈值(0-1)", style="Anime.TLabel")
         threshold_label.pack(anchor=tk.W, **pad)
         self.var_threshold = tk.StringVar(value="0.8")
-        threshold_entry = ttk.Entry(left_frame, textvariable=self.var_threshold, style="Anime.TEntry", width=25)
+        threshold_entry = ttk.Entry(
+            left_frame, 
+            textvariable=self.var_threshold, 
+            style="Anime.TEntry", 
+            width=25
+        )
         threshold_entry.pack(fill=tk.X, **pad)
 
         # 按钮
@@ -346,7 +366,8 @@ class LedgerApp(tk.Tk):
             self.budget_progress_canvas.create_rectangle(
                 10, 10, width - 10, height - 10,
                 fill=AnimeTheme.BG_MAIN,
-                outline=AnimeTheme.PRIMARY_PINK, width=2
+                outline=AnimeTheme.PRIMARY_PINK, 
+                width=2
             )
 
             # 进度?
@@ -406,9 +427,11 @@ class LedgerApp(tk.Tk):
         ttk.Label(control_frame, text="维度", style="Anime.TLabel").pack(side=tk.LEFT, padx=5)
         self.var_stats_dimension = tk.StringVar(value="category")
         dimension_combo = ttk.Combobox(
-            control_frame, textvariable=self.var_stats_dimension,
+            control_frame, 
+            textvariable=self.var_stats_dimension,
             values=["time", "category", "method"],
-            state="readonly", width=15
+            state="readonly", 
+            width=15
         )
         dimension_combo.pack(side=tk.LEFT, padx=5)
 
@@ -499,8 +522,10 @@ class LedgerApp(tk.Tk):
         ttk.Label(search_frame, text="关键词", style="Anime.TLabel").grid(row=0, column=0, sticky=tk.W, **pad)
         self.var_search_keyword = tk.StringVar()
         ttk.Entry(
-            search_frame, textvariable=self.var_search_keyword,
-            style="Anime.TEntry", width=30
+            search_frame, 
+            textvariable=self.var_search_keyword,
+            style="Anime.TEntry", 
+            width=30
         ).grid(row=0, column=1, **pad)
 
         # 金额范围
@@ -509,9 +534,19 @@ class LedgerApp(tk.Tk):
         range_frame.grid(row=1, column=1, sticky=tk.W, **pad)
         self.var_search_min = tk.StringVar()
         self.var_search_max = tk.StringVar()
-        ttk.Entry(range_frame, textvariable=self.var_search_min, style="Anime.TEntry", width=10).pack(side=tk.LEFT)
+        ttk.Entry(
+            range_frame, 
+            textvariable=self.var_search_min, 
+            style="Anime.TEntry", 
+            width=10
+        ).pack(side=tk.LEFT)
         ttk.Label(range_frame, text=" ~ ", style="Anime.TLabel").pack(side=tk.LEFT)
-        ttk.Entry(range_frame, textvariable=self.var_search_max, style="Anime.TEntry", width=10).pack(side=tk.LEFT)
+        ttk.Entry(
+            range_frame, 
+            textvariable=self.var_search_max, 
+            style="Anime.TEntry", 
+            width=10
+        ).pack(side=tk.LEFT)
 
         # 日期范围
         ttk.Label(search_frame, text="日期范围", style="Anime.TLabel").grid(row=2, column=0, sticky=tk.W, **pad)
@@ -519,9 +554,19 @@ class LedgerApp(tk.Tk):
         date_range_frame.grid(row=2, column=1, sticky=tk.W, **pad)
         self.var_search_start = tk.StringVar()
         self.var_search_end = tk.StringVar()
-        ttk.Entry(date_range_frame, textvariable=self.var_search_start, style="Anime.TEntry", width=12).pack(side=tk.LEFT)
+        ttk.Entry(
+            date_range_frame, 
+            textvariable=self.var_search_start, 
+            style="Anime.TEntry", 
+            width=12
+        ).pack(side=tk.LEFT)
         ttk.Label(date_range_frame, text=" ~ ", style="Anime.TLabel").pack(side=tk.LEFT)
-        ttk.Entry(date_range_frame, textvariable=self.var_search_end, style="Anime.TEntry", width=12).pack(side=tk.LEFT)
+        ttk.Entry(
+            date_range_frame, 
+            textvariable=self.var_search_end, 
+            style="Anime.TEntry", 
+            width=12
+        ).pack(side=tk.LEFT)
 
         # 类型
         ttk.Label(search_frame, text="类型", style="Anime.TLabel").grid(row=3, column=0, sticky=tk.W, **pad)
@@ -529,15 +574,24 @@ class LedgerApp(tk.Tk):
         type_frame = ttk.Frame(search_frame)
         type_frame.grid(row=3, column=1, sticky=tk.W, **pad)
         ttk.Radiobutton(
-            type_frame, text="全部", variable=self.var_search_type, value="",
+            type_frame, 
+            text="全部", 
+            variable=self.var_search_type, 
+            value="",
             style="Anime.TLabel"
         ).pack(side=tk.LEFT, padx=5)
         ttk.Radiobutton(
-            type_frame, text="收入", variable=self.var_search_type, value="income",
+            type_frame, 
+            text="收入", 
+            variable=self.var_search_type, 
+            value="income",
             style="Anime.TLabel"
         ).pack(side=tk.LEFT, padx=5)
         ttk.Radiobutton(
-            type_frame, text="支出", variable=self.var_search_type, value="expense",
+            type_frame, 
+            text="支出", 
+            variable=self.var_search_type, 
+            value="expense",
             style="Anime.TLabel"
         ).pack(side=tk.LEFT, padx=5)
 
@@ -708,3 +762,7 @@ def main() -> None:
 # 允许直接运行
 if __name__ == "__main__":
     main()
+
+
+
+

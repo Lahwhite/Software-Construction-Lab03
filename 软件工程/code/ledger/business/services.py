@@ -185,15 +185,15 @@ class BudgetService:
         return self._budgets.update_item(item)
 
     def delete_item(self, item_id: int) -> bool:
-        """??????
+        """删除预算项。
 
         Args:
-            item_id: ???ID
+            item_id: 预算项ID
 
         Returns:
-            bool: ??????
+            bool: 是否删除成功
         """
-        return self._budgets.delete_item(id)
+        return self._budgets.delete_item(item_id)
 
     def get_items_by_budget(self, budget_id: int) -> List[BudgetItem]:
         """?????????????
@@ -255,7 +255,9 @@ class BudgetService:
                 return
         
         # 创建新预算项
-        new_item = BudgetItem(id=None, budget_id=budget.id, category_id=category_obj.id, amount=amount)
+        new_item = BudgetItem(
+            id=None, budget_id=budget.id, category_id=category_obj.id, amount=amount
+        )
         self.add_item(new_item)
 
     def progress(self, month: str) -> BudgetProgress:
@@ -338,8 +340,8 @@ class RecordService:
         self._budgets = BudgetService()
 
     def add_record(
-        self, type_: str, amount: float, date_: date, 
-        payment_method: str, category: Optional[str] = None, 
+        self, type_: str, amount: float, date_: date,
+        payment_method: str, category: Optional[str] = None,
         note: str = ""
     ) -> Record:
         """添加记录。
@@ -370,9 +372,9 @@ class RecordService:
         return self._records.update(record)
 
     def update_record(
-        self, record_id: int, type_: Optional[str] = None, 
-        amount: Optional[float] = None, date_: Optional[date] = None, 
-        payment_method: Optional[str] = None, category: Optional[str] = None, 
+        self, record_id: int, type_: Optional[str] = None,
+        amount: Optional[float] = None, date_: Optional[date] = None,
+        payment_method: Optional[str] = None, category: Optional[str] = None,
         note: Optional[str] = None
     ) -> None:
         """更新记录。
@@ -386,7 +388,9 @@ class RecordService:
             category: 分类名称 (可选)
             note: 备注 (可选)
         """
-        return self._records.update_record(record_id, type_, amount, date_, payment_method, category, note)
+        return self._records.update_record(
+            record_id, type_, amount, date_, payment_method, category, note
+        )
 
     def delete(self, id_: int) -> bool:
         """删除记录
@@ -400,15 +404,15 @@ class RecordService:
         return self._records.delete(id_)
 
     def search(
-        self, min_amount: Optional[float] = None, 
-        max_amount: Optional[float] = None, 
-        start: Optional[date] = None, 
-        end: Optional[date] = None, 
-        keyword: Optional[str] = None, 
-        type_: Optional[str] = None, 
+        self, min_amount: Optional[float] = None,
+        max_amount: Optional[float] = None,
+        start: Optional[date] = None,
+        end: Optional[date] = None,
+        keyword: Optional[str] = None,
+        type_: Optional[str] = None,
         limit: Optional[int] = None
     ) -> List[Record]:
-        """?????
+        """搜索记录。
 
         Args:
             min_amount: ????????
@@ -511,3 +515,6 @@ class RecordService:
             threshold=budget.threshold,
             by_category=by_category
         )
+
+
+
