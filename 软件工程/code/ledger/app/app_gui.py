@@ -12,14 +12,15 @@ from datetime import date, timedelta
 import tkinter as tk
 from tkinter import ttk
 
-# ????????Python???????????ledger??
+# 设置Python路径以便导入ledger模块
 _here = Path(__file__).resolve()
-_package_dir = _here.parent  # ledger/ ??
-_repo_root = _package_dir.parent  # code/ ??
+_package_dir = _here.parent  # ledger/ 目录
+_repo_root = _package_dir.parent  # code/ 目录
 for path in (_package_dir, _repo_root):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
+# 导入项目内部模块
 from ledger.data.database import migrate
 from ledger.business.services import BudgetService, CategoryService, RecordService
 from ledger.business.stats import StatsService
@@ -170,6 +171,7 @@ class LedgerApp(tk.Tk):
                 ))
         except Exception as exc:
             show_error(f"刷新首页数据失败: {exc}")
+            # 注意：这里暂时保留了广泛的异常捕获以确保应用稳定性，但在生产环境中应该使用更具体的异常类型
 
     def add_record(self) -> None:
         """添加新的记录。
@@ -289,7 +291,9 @@ class LedgerApp(tk.Tk):
         btn_set = create_button(left_frame, "💾 设置预算", self._on_set_budget)
         btn_set.pack(pady=15, fill=tk.X)
 
-        btn_progress = create_button(left_frame, "📊 查看进度", self._on_budget_progress, style="secondary")
+        btn_progress = create_button(
+            left_frame, "📊 查看进度", self._on_budget_progress, style="secondary"
+        )
         btn_progress.pack(pady=5, fill=tk.X)
 
         # 右侧进度显示区域
@@ -401,9 +405,11 @@ class LedgerApp(tk.Tk):
 
         ttk.Label(control_frame, text="维度", style="Anime.TLabel").pack(side=tk.LEFT, padx=5)
         self.var_stats_dimension = tk.StringVar(value="category")
-        dimension_combo = ttk.Combobox(control_frame, textvariable=self.var_stats_dimension,
-                                      values=["time", "category", "method"],
-                                      state="readonly", width=15)
+        dimension_combo = ttk.Combobox(
+            control_frame, textvariable=self.var_stats_dimension,
+            values=["time", "category", "method"],
+            state="readonly", width=15
+        )
         dimension_combo.pack(side=tk.LEFT, padx=5)
 
         ttk.Label(control_frame, text="开始日期", style="Anime.TLabel").pack(side=tk.LEFT, padx=5)
@@ -493,7 +499,7 @@ class LedgerApp(tk.Tk):
         ttk.Label(search_frame, text="关键词", style="Anime.TLabel").grid(row=0, column=0, sticky=tk.W, **pad)
         self.var_search_keyword = tk.StringVar()
         ttk.Entry(
-            search_frame, textvariable=self.var_search_keyword, 
+            search_frame, textvariable=self.var_search_keyword,
             style="Anime.TEntry", width=30
         ).grid(row=0, column=1, **pad)
 
@@ -542,9 +548,11 @@ class LedgerApp(tk.Tk):
         result_frame = ttk.Frame(parent)
         result_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-        self.search_tree = ttk.Treeview(result_frame,
-                                       columns=("id", "type", "amount", "date", "category", "note"),
-                                       show="headings")
+        self.search_tree = ttk.Treeview(
+            result_frame,
+            columns=("id", "type", "amount", "date", "category", "note"),
+            show="headings"
+        )
         for col, text in (
             ("id", "ID"),
             ("type", "类型"),
@@ -575,9 +583,9 @@ class LedgerApp(tk.Tk):
             type_ = self.var_search_type.get() or None
 
             records = self.record_repo.search(
-                keyword=keyword,
-                min_amount=min_amount,
-                max_amount=max_amount,
+            keyword=keyword,
+            min_amount=min_amount,
+            max_amount=max_amount,
                 start=start,
                 end=end,
                 type_=type_,
@@ -631,9 +639,14 @@ class LedgerApp(tk.Tk):
         entry_frame.pack(fill=tk.X, pady=10)
 
         self.var_new_category = tk.StringVar()
-        ttk.Entry(entry_frame, textvariable=self.var_new_category, style="Anime.TEntry", width=20).pack(fill=tk.X, pady=5)
+        ttk.Entry(
+            entry_frame, textvariable=self.var_new_category,
+            style="Anime.TEntry", width=20
+        ).pack(fill=tk.X, pady=5)
         create_button(entry_frame, "?添加", self._on_add_category).pack(fill=tk.X, pady=5)
-        create_button(entry_frame, "🗑?删除选中", self._on_delete_category, style="secondary").pack(fill=tk.X, pady=5)
+        create_button(
+            entry_frame, "🗑?删除选中", self._on_delete_category, style="secondary"
+        ).pack(fill=tk.X, pady=5)
 
         self._refresh_categories()
 
@@ -684,6 +697,10 @@ class LedgerApp(tk.Tk):
             show_error(f"删除分类失败: {exc}")
 
 def main() -> None:
+    """应用程序入口点。
+    
+    初始化并运行记账本应用的GUI界面。
+    """
     app = LedgerApp()
     app.mainloop()
 

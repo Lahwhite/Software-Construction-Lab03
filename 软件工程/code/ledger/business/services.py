@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """??????????????????"""
 
 from __future__ import annotations
@@ -44,28 +44,30 @@ class CategoryService:
         """
         return self._categories.get_or_create(name)
 
-    def update(self, id: int, name: str) -> Category:
+    def update(self, category_id: int, name: str) -> Category:
         """?????
 
         Args:
-            id: ??ID
+            category_id: ??ID
             name: ?????
 
         Returns:
             Category: ??????
         """
-        return self._categories.update(id, name)
+        # CategoryRepository 没有 update 方法，需要先删除再添加或修改代码实现
+        # 这里暂时注释掉，因为仓库类不支持此方法
+        raise NotImplementedError("Category update not supported in repository")
 
-    def delete(self, id: int) -> bool:
+    def delete(self, id_: int) -> bool:
         """?????
 
         Args:
-            id: ??ID
+            id_: ??ID
 
         Returns:
             bool: ??????
         """
-        return self._categories.delete(id)
+        return self._categories.delete(id_)
 
 # ??????
 class PaymentMethodService:
@@ -94,28 +96,30 @@ class PaymentMethodService:
         """
         return self._payment_methods.add(name)
 
-    def update(self, id: int, name: str) -> BudgetItem:
+    def update(self, method_id: int, name: str) -> BudgetItem:
         """???????
 
         Args:
-            id: ????ID
+            method_id: ????ID
             name: ???????
 
         Returns:
             BudgetItem: ????????
         """
-        return self._payment_methods.update(id, name)
+        # PaymentMethodRepository 没有 update 方法，需要先删除再添加或修改代码实现
+        raise NotImplementedError("Payment method update not supported in repository")
 
-    def delete(self, id: int) -> bool:
+    def delete(self, method_id: int) -> bool:
         """???????
 
         Args:
-            id: ????ID
+            method_id: ????ID
 
         Returns:
             bool: ??????
         """
-        return self._payment_methods.delete(id)
+        # PaymentMethodRepository 没有 delete 方法
+        raise NotImplementedError("Payment method delete not supported in repository")
 
 # ????
 class BudgetService:
@@ -137,15 +141,15 @@ class BudgetService:
         return self._budgets.get_by_month(month)
 
     def create(self, budget: Budget) -> Budget:
-        """?????
+        """??????
 
         Args:
             budget: ????
 
         Returns:
-            Budget: ?????
+            Budget: ????
         """
-        return self._budgets.create(budget)
+        return self._budgets.add(budget)
 
     def update(self, budget: Budget) -> Budget:
         """?????
@@ -180,11 +184,11 @@ class BudgetService:
         """
         return self._budgets.update_item(item)
 
-    def delete_item(self, id: int) -> bool:
+    def delete_item(self, item_id: int) -> bool:
         """??????
 
         Args:
-            id: ???ID
+            item_id: ???ID
 
         Returns:
             bool: ??????
@@ -221,10 +225,10 @@ class BudgetService:
             existing_budget.threshold = threshold
             self.update(existing_budget)
             return existing_budget
-        else:
-            # 创建新预算
-            new_budget = Budget(month=month, total=total, threshold=threshold)
-            return self.create(new_budget)
+        
+        # 创建新预算
+        new_budget = Budget(id=None, month=month, total=total, threshold=threshold)
+        return self.create(new_budget)
 
     def set_category_budget(self, month: str, category: str, amount: float) -> None:
         """设置分类预算
@@ -251,7 +255,7 @@ class BudgetService:
                 return
         
         # 创建新预算项
-        new_item = BudgetItem(budget_id=budget.id, category_id=category_obj.id, amount=amount)
+        new_item = BudgetItem(id=None, budget_id=budget.id, category_id=category_obj.id, amount=amount)
         self.add_item(new_item)
 
     def progress(self, month: str) -> BudgetProgress:
@@ -333,7 +337,11 @@ class RecordService:
         self._payment_methods = PaymentMethodService()
         self._budgets = BudgetService()
 
-    def add_record(self, type_: str, amount: float, date_: date, payment_method: str, category: Optional[str] = None, note: str = "") -> Record:
+    def add_record(
+        self, type_: str, amount: float, date_: date, 
+        payment_method: str, category: Optional[str] = None, 
+        note: str = ""
+    ) -> Record:
         """添加记录。
 
         Args:
@@ -361,7 +369,12 @@ class RecordService:
         """
         return self._records.update(record)
 
-    def update_record(self, record_id: int, type_: Optional[str] = None, amount: Optional[float] = None, date_: Optional[date] = None, payment_method: Optional[str] = None, category: Optional[str] = None, note: Optional[str] = None) -> None:
+    def update_record(
+        self, record_id: int, type_: Optional[str] = None, 
+        amount: Optional[float] = None, date_: Optional[date] = None, 
+        payment_method: Optional[str] = None, category: Optional[str] = None, 
+        note: Optional[str] = None
+    ) -> None:
         """更新记录。
 
         Args:
@@ -375,18 +388,26 @@ class RecordService:
         """
         return self._records.update_record(record_id, type_, amount, date_, payment_method, category, note)
 
-    def delete(self, id: int) -> bool:
-        """?????
+    def delete(self, id_: int) -> bool:
+        """删除记录
 
         Args:
-            id: ??ID
+            id_: 记录ID
 
         Returns:
-            bool: ??????
+            bool: 是否删除成功
         """
-        return self._records.delete(id)
+        return self._records.delete(id_)
 
-    def search(self, min_amount: Optional[float] = None, max_amount: Optional[float] = None, start: Optional[date] = None, end: Optional[date] = None, keyword: Optional[str] = None, type_: Optional[str] = None, limit: Optional[int] = None) -> List[Record]:
+    def search(
+        self, min_amount: Optional[float] = None, 
+        max_amount: Optional[float] = None, 
+        start: Optional[date] = None, 
+        end: Optional[date] = None, 
+        keyword: Optional[str] = None, 
+        type_: Optional[str] = None, 
+        limit: Optional[int] = None
+    ) -> List[Record]:
         """?????
 
         Args:
