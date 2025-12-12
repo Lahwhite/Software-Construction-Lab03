@@ -1,0 +1,16 @@
+[MASTER]
+
+[MESSAGES CONTROL]
+disable=
+    C0114, # missing-module-docstring
+    C0115, # missing-class-docstring
+    C0116, # missing-function-docstring
+
+[DESIGN]
+max-attributes=40      # Increase from default 7
+max-locals=30         # Increase from default 15
+max-args=10           # Increase from default 5
+max-statements=100    # Increase from default 50
+
+[FORMAT]
+max-line-length=120   # Increase from default 100
