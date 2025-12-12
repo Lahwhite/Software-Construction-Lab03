@@ -12,6 +12,8 @@ from .models import (
     Category,
     PaymentMethod,
     Record,
+    RecordFinancials,
+    RecordMetadata,
 )
 
 
@@ -79,6 +81,10 @@ class PaymentMethodRepository:
         with db_cursor() as c:
             c.execute("SELECT id, name FROM payment_methods")
             return [PaymentMethod(id=r["id"], name=r["name"]) for r in c.fetchall()]
+
+    def list_all(self) -> List[PaymentMethod]:
+        """获取所有支付方式（别名方法）"""
+        return self.list()
 
     def get_by_name(self, name: str) -> Optional[PaymentMethod]:
         """根据名称获取支付方式"""
@@ -152,6 +158,9 @@ class RecordRepository:
 
             # 添加记录
             now = datetime.now(timezone.utc)
+            # 将date对象转换为ISO格式字符串
+            date_str = date_.isoformat()
+            now_str = now.isoformat()
             c.execute(
                 """
                 INSERT INTO records (
@@ -161,15 +170,20 @@ class RecordRepository:
                 (
                     type_,
                     amount,
-                    date_,
+                    date_str,
                     pm_id,
                     category_id,
                     note,
-                    now,
-                    now,
+                    now_str,
+                    now_str,
                 ),
             )
-            return self.get_by_id(c.lastrowid)
+            # 在同一个连接中获取刚插入的记录
+            c.execute("SELECT * FROM records WHERE id = ?", (c.lastrowid,))
+            r = c.fetchone()
+            if r is None:
+                raise ValueError(f"Record with id {c.lastrowid} not found")
+            return self._row_to_record(r)
 
     # pylint: disable=R0914
     # 忽略too-many-locals警告
@@ -198,7 +212,7 @@ class RecordRepository:
                 params.append(amount)
             if date_ is not None:
                 updates.append("date = ?")
-                params.append(date_)
+                params.append(date_.isoformat())
             if payment_method is not None:
                 # 获取支付方式ID
                 c.execute(
@@ -231,13 +245,16 @@ class RecordRepository:
                         category_id = cat_row["id"]
                     updates.append("category_id = ?")
                     params.append(category_id)
+            else:
+                # 如果category为None，设置为NULL
+                updates.append("category_id = NULL")
             if note is not None:
                 updates.append("note = ?")
                 params.append(note)
 
             # 添加更新时间
             updates.append("updated_at = ?")
-            params.append(datetime.now(timezone.utc))
+            params.append(datetime.now(timezone.utc).isoformat())
             params.append(record_id)
 
             if updates:
@@ -253,12 +270,14 @@ class RecordRepository:
         """删除记录（别名方法）"""
         self.delete_record(record_id)
 
-    def list_recent(self, limit: int = 20) -> List[Record]:
+    def list_recent(self, limit: Optional[int] = None) -> List[Record]:
         """获取最近的记录"""
+        # 如果limit为None，使用默认值20
+        actual_limit = limit if limit is not None else 20
         with db_cursor() as c:
             c.execute(
                 "SELECT * FROM records ORDER BY created_at DESC LIMIT ?",
-                (limit,),
+                (actual_limit,),
             )
             return [self._row_to_record(r) for r in c.fetchall()]
 
@@ -422,33 +441,43 @@ class RecordRepository:
     @staticmethod
     def _row_to_record(r) -> Record:
         """将数据库行转换为记录对象"""
-        from datetime import date, datetime, timezone
         # 将字符串转换为日期对象
         record_date = date.fromisoformat(r["date"]) if isinstance(r["date"], str) else r["date"]
         # 将字符串转换为datetime对象 - 先将Z替换为+00:00以支持fromisoformat
-        created_at_str = r["created_at"].replace('Z', '+00:00') if isinstance(r["created_at"], str) and 'Z' in r["created_at"] else r["created_at"]
-        updated_at_str = r["updated_at"].replace('Z', '+00:00') if isinstance(r["updated_at"], str) and 'Z' in r["updated_at"] else r["updated_at"]
-        created_at = datetime.fromisoformat(created_at_str).astimezone(timezone.utc) if isinstance(created_at_str, str) else r["created_at"]
-        updated_at = datetime.fromisoformat(updated_at_str).astimezone(timezone.utc) if isinstance(updated_at_str, str) else r["updated_at"]
-        
+        created_at_str = r["created_at"]
+        if isinstance(created_at_str, str) and 'Z' in created_at_str:
+            created_at_str = created_at_str.replace('Z', '+00:00')
+        updated_at_str = r["updated_at"]
+        if isinstance(updated_at_str, str) and 'Z' in updated_at_str:
+            updated_at_str = updated_at_str.replace('Z', '+00:00')
+
+        # 处理created_at
+        if isinstance(created_at_str, str):
+            created_at = datetime.fromisoformat(created_at_str).astimezone(timezone.utc)
+        else:
+            created_at = r["created_at"]
+
+        # 处理updated_at
+        if isinstance(updated_at_str, str):
+            updated_at = datetime.fromisoformat(updated_at_str).astimezone(timezone.utc)
+        else:
+            updated_at = r["updated_at"]
+
         return Record(
             id=r["id"],
             type=r["type"],
-            amount=r["amount"],
             date=record_date,
-            payment_method_id=r["payment_method_id"],
-            category_id=r["category_id"],
+            financials=RecordFinancials(
+                amount=r["amount"],
+                payment_method_id=r["payment_method_id"],
+                category_id=r["category_id"]
+            ),
             note=r["note"],
-            created_at=created_at,
-            updated_at=updated_at,
+            metadata=RecordMetadata(
+                created_at=created_at,
+                updated_at=updated_at
+            ),
         )
-
-    def delete(self, id_: int) -> None:
-        """删除记录"""
-        with db_cursor() as c:
-            c.execute("DELETE FROM records WHERE id = ?", (id_,))
-
-
 class BudgetRepository:
     """预算仓库类，用于管理预算数据"""
 

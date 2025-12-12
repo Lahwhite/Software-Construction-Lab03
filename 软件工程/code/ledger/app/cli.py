@@ -56,7 +56,7 @@ def list_categories() -> None:
 
 def add_record(
     type_: str, amount: float,
-    date_str: str, payment_method: str,
+    *, date_str: str, payment_method: str,
     category: Optional[str], note: str
 ) -> None:
     """?????????
@@ -76,7 +76,7 @@ def add_record(
         payment_method=payment_method,
         category=category, note=note
     )
-    click.echo(f"????: id={r.id}, {r.type}, {r.amount}, {r.date}")
+    click.echo(f"????: id={r.id}, {r.type}, {r.financials.amount}, {r.date}")
 
 
 @cli.command("list-records")
@@ -110,7 +110,7 @@ def list_records(limit: int) -> None:
 
 def update_record(
     record_id: int,
-    type_: Optional[str],
+    *, type_: Optional[str],
     amount: Optional[float],
     date_str: Optional[str],
     payment_method: Optional[str],
@@ -162,7 +162,7 @@ def delete_record(record_id: int) -> None:
 # ??too-many-arguments??
 
 def search(min_amount: Optional[float], max_amount: Optional[float],
-           start: Optional[str], end: Optional[str],
+           *, start: Optional[str], end: Optional[str],
            keyword: Optional[str], type_: Optional[str]) -> None:
     """???????
     

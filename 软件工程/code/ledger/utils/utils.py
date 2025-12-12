@@ -43,4 +43,3 @@ def clamp(value: float, min_value: float, max_value: float) -> float:
         限制后的值
     """
     return max(min_value, min(value, max_value))
-

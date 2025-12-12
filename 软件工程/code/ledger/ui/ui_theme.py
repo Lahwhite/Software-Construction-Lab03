@@ -1,3 +1,5 @@
+"""UI主题模块，提供二次元风格的界面配色和样式。"""
+
 from __future__ import annotations
 
 import tkinter as tk
@@ -16,6 +18,30 @@ class AnimeTheme:
     BG_CARD = "#FFFFFF"
     BG_GRADIENT_START = "#EAD6FF"
     BG_GRADIENT_END = "#FFE8F2"
+    @classmethod
+    def get_theme_colors(cls) -> dict:
+        """获取所有主题颜色。
+        
+        Returns:
+            dict: 主题颜色字典
+        """
+        return {
+            "PRIMARY_PINK": cls.PRIMARY_PINK,
+            "PRIMARY_BLUE": cls.PRIMARY_BLUE,
+            "PRIMARY_PURPLE": cls.PRIMARY_PURPLE,
+            "BG_LIGHT": cls.BG_LIGHT,
+            "BG_MAIN": cls.BG_MAIN,
+            "BG_CARD": cls.BG_CARD,
+        }
+    @classmethod
+    def apply_theme(cls, root: tk.Tk) -> None:
+        """应用主题到ttk组件。
+        
+        Args:
+            root: Tk根窗口
+        """
+        style = ttk.Style(root)
+        style.theme_use("clam")
 
     TEXT_DARK = "#2C2C2C"
     TEXT_LIGHT = "#666666"
@@ -31,6 +57,11 @@ class AnimeTheme:
 
 
 def apply_theme(root: tk.Tk) -> None:
+    """将二次元主题应用到Tkinter应用程序。
+    
+    Args:
+        root: Tkinter的根窗口对象
+    """
     style = ttk.Style()
     style.configure("TNotebook", background=AnimeTheme.BG_LIGHT, borderwidth=0)
     style.configure(
@@ -76,6 +107,18 @@ def apply_theme(root: tk.Tk) -> None:
 
 
 def create_button(parent, text: str, command, style: str = "primary", **kwargs) -> tk.Button:
+    """创建具有二次元风格的按钮。
+    
+    Args:
+        parent: 父组件
+        text: 按钮显示文本
+        command: 按钮点击事件处理函数
+        style: 按钮样式（"primary"或"secondary"）
+        **kwargs: 其他按钮参数
+        
+    Returns:
+        创建的Tkinter按钮对象
+    """
     if style == "secondary":
         bg = AnimeTheme.BUTTON_SECONDARY
         active_bg = "#6A1B9A"
@@ -102,6 +145,11 @@ def create_button(parent, text: str, command, style: str = "primary", **kwargs) 
 
 
 def draw_gradient_background(canvas: tk.Canvas) -> None:
+    """在画布上绘制渐变背景效果。
+    
+    Args:
+        canvas: Tkinter画布对象
+    """
     width = canvas.winfo_width()
     height = canvas.winfo_height()
     if width <= 0 or height <= 0:
@@ -121,6 +169,16 @@ def draw_gradient_background(canvas: tk.Canvas) -> None:
 
 
 def interpolate_color(start_hex: str, end_hex: str, ratio: float) -> str:
+    """在两种颜色之间进行插值计算，返回过渡颜色。
+    
+    Args:
+        start_hex: 起始颜色的十六进制字符串
+        end_hex: 结束颜色的十六进制字符串
+        ratio: 插值比例（0.0-1.0）
+        
+    Returns:
+        过渡颜色的十六进制字符串
+    """
     ratio = max(0.0, min(1.0, ratio))
     s = int(start_hex[1:], 16)
     e = int(end_hex[1:], 16)
@@ -130,4 +188,3 @@ def interpolate_color(start_hex: str, end_hex: str, ratio: float) -> str:
     g = int(g1 + (g2 - g1) * ratio)
     b = int(b1 + (b2 - b1) * ratio)
     return f"#{r:02X}{g:02X}{b:02X}"
-

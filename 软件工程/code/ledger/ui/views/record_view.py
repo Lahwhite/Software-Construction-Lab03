@@ -1,3 +1,5 @@
+"""记录视图模块，提供收支记录的添加和列表页面。"""
+
 from __future__ import annotations
 
 import tkinter as tk
@@ -9,6 +11,12 @@ from ..ui_widgets import set_placeholder
 
 
 def build_add_page(app, parent: ttk.Frame) -> None:
+    """构建添加收支记录的页面。
+    
+    Args:
+        app: 应用程序实例
+        parent: 父组件
+    """
     parent.configure(style="AnimeCard.TFrame")
     frame = ttk.Frame(parent)
     frame.pack(fill=tk.BOTH, expand=True, padx=30, pady=30)
@@ -74,6 +82,12 @@ def build_add_page(app, parent: ttk.Frame) -> None:
 
 
 def build_list_page(app, parent: ttk.Frame) -> None:
+    """构建收支记录列表页面。
+    
+    Args:
+        app: 应用程序实例
+        parent: 父组件
+    """
     toolbar = ttk.Frame(parent)
     toolbar.pack(fill=tk.X, padx=10, pady=10)
     create_button(toolbar, "🔄 刷新", app.refresh_records, style="secondary").pack(
@@ -105,4 +119,3 @@ def build_list_page(app, parent: ttk.Frame) -> None:
     app.records_tree.configure(yscrollcommand=scrollbar.set)
     app.records_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
     scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-

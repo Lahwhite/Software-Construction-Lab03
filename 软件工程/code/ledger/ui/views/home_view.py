@@ -1,3 +1,5 @@
+"""首页视图模块，提供应用程序的主界面显示。"""
+
 from __future__ import annotations
 
 import tkinter as tk
@@ -9,6 +11,12 @@ from ..ui_widgets import create_card
 
 
 def build(app, parent: ttk.Frame) -> None:
+    """构建首页界面。
+    
+    Args:
+        app: 应用程序实例
+        parent: 父组件
+    """
     parent.configure(style="AnimeCard.TFrame")
     title_frame = ttk.Frame(parent)
     title_frame.pack(fill=tk.X, padx=20, pady=15)
@@ -64,6 +72,11 @@ def build(app, parent: ttk.Frame) -> None:
 
 
 def refresh(app) -> None:
+    """刷新首页数据。
+    
+    Args:
+        app: 应用程序实例
+    """
     today = date.today()
     month_start = date(today.year, today.month, 1)
     month_end = date(today.year + (today.month == 12), today.month % 12 + 1, 1) - timedelta(days=1)
@@ -73,4 +86,3 @@ def refresh(app) -> None:
     app.income_value.config(text=f"¥{income:.2f}")
     app.expense_value.config(text=f"¥{expense:.2f}")
     # 更多刷新逻辑留在 app.refresh_home 中调用
-

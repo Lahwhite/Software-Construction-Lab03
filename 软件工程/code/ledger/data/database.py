@@ -1,3 +1,5 @@
+"""数据库模块，提供了与SQLite数据库交互的功能。"""
+
 import os
 import sqlite3
 from contextlib import contextmanager
@@ -16,6 +18,14 @@ def _ensure_directory(path: str) -> None:
 
 
 def get_connection(db_path: Optional[str] = None) -> sqlite3.Connection:
+    """获取数据库连接
+    
+    Args:
+        db_path: 数据库文件路径，默认为DEFAULT_DB_PATH
+        
+    Returns:
+        sqlite3.Connection: 数据库连接对象
+    """
     path = db_path or DEFAULT_DB_PATH
     _ensure_directory(path)
     connection = sqlite3.connect(path)
@@ -26,6 +36,14 @@ def get_connection(db_path: Optional[str] = None) -> sqlite3.Connection:
 # 数据库游标上下文管理器
 @contextmanager
 def db_cursor(db_path: Optional[str] = None) -> Iterator[sqlite3.Cursor]:
+    """数据库游标上下文管理器，用于执行SQL语句
+    
+    Args:
+        db_path: 数据库文件路径，默认为DEFAULT_DB_PATH
+        
+    Yields:
+        sqlite3.Cursor: 数据库游标对象
+    """
     conn = get_connection(db_path)
     try:
         cursor = conn.cursor()
@@ -139,5 +157,3 @@ def migrate(db_path: Optional[str] = None) -> None:
                 "INSERT INTO payment_methods(name) VALUES (?)",
                 [("WeChat",), ("Alipay",), ("Cash",)],
             )
-
-

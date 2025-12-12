@@ -40,7 +40,7 @@ def test_category_and_record_integration(category_service, record_service, clean
     
     # 3. 验证记录正确关联了分类
     assert record.id is not None
-    assert record.amount == 100.0
+    assert record.financials.amount == 100.0
     
     # 4. 测试分类列表和记录列表功能正常
     categories = category_service.list()
@@ -49,7 +49,7 @@ def test_category_and_record_integration(category_service, record_service, clean
     
     records = record_service.list_recent()
     assert len(records) == 1
-    assert records[0].amount == 100.0
+    assert records[0].financials.amount == 100.0
 
 def test_record_crud_integration(record_service, category_service, clean_test_data):
     """集成测试：测试记录的完整CRUD操作"""
@@ -97,7 +97,7 @@ def test_record_crud_integration(record_service, category_service, clean_test_da
     # 6. 验证更新结果
     updated_records = record_service.list_recent()
     updated_expense = next((r for r in updated_records if r.id == expense_record.id), None)
-    assert updated_expense.amount == 250.0
+    assert updated_expense.financials.amount == 250.0
     assert updated_expense.note == "打车费"
     
     # 7. 删除记录

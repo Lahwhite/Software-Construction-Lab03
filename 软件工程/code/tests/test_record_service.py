@@ -38,10 +38,10 @@ def test_add_record_with_category(record_service, clean_record_data):
     # 验证记录信息
     assert record is not None
     assert record.type == "expense"
-    assert record.amount == 100.0
+    assert record.financials.amount == 100.0
     assert record.date == test_date
-    assert record.payment_method_id is not None
-    assert record.category_id is not None
+    assert record.financials.payment_method_id is not None
+    assert record.financials.category_id is not None
     assert record.note == "午餐"
 
 
@@ -63,10 +63,10 @@ def test_add_record_without_category(record_service, clean_record_data):
     # 验证记录信息
     assert record is not None
     assert record.type == "income"
-    assert record.amount == 5000.0
+    assert record.financials.amount == 5000.0
     assert record.date == test_date
-    assert record.payment_method_id is not None
-    assert record.category_id is None
+    assert record.financials.payment_method_id is not None
+    assert record.financials.category_id is None
     assert record.note == "工资"
 
 
@@ -99,7 +99,7 @@ def test_update_record(record_service, clean_record_data):
     
     # 验证更新结果
     assert updated_record is not None
-    assert updated_record.amount == 250.0
+    assert updated_record.financials.amount == 250.0
     assert updated_record.date == new_date
     assert updated_record.note == "新衣服"
 
@@ -129,7 +129,7 @@ def test_update_record_with_none_values(record_service, clean_record_data):
     
     # 验证更新结果
     assert updated_record is not None
-    assert updated_record.category_id is None
+    assert updated_record.financials.category_id is None
 
 
 def test_delete_record(record_service, clean_record_data):
@@ -217,7 +217,7 @@ def test_add_record_with_negative_amount(record_service, clean_record_data):
     
     # 验证记录信息
     assert record is not None
-    assert record.amount == -50.0
+    assert record.financials.amount == -50.0
 
 
 def test_add_record_with_large_amount(record_service, clean_record_data):
@@ -238,7 +238,7 @@ def test_add_record_with_large_amount(record_service, clean_record_data):
     
     # 验证记录信息
     assert record is not None
-    assert record.amount == large_amount
+    assert record.financials.amount == large_amount
 
 
 def test_add_record_with_empty_note(record_service, clean_record_data):
