@@ -425,9 +425,11 @@ class RecordRepository:
         from datetime import date, datetime, timezone
         # 将字符串转换为日期对象
         record_date = date.fromisoformat(r["date"]) if isinstance(r["date"], str) else r["date"]
-        # 将字符串转换为datetime对象
-        created_at = datetime.fromisoformat(r["created_at"].replace('+00:00', 'Z')).astimezone(timezone.utc) if isinstance(r["created_at"], str) else r["created_at"]
-        updated_at = datetime.fromisoformat(r["updated_at"].replace('+00:00', 'Z')).astimezone(timezone.utc) if isinstance(r["updated_at"], str) else r["updated_at"]
+        # 将字符串转换为datetime对象 - 先将Z替换为+00:00以支持fromisoformat
+        created_at_str = r["created_at"].replace('Z', '+00:00') if isinstance(r["created_at"], str) and 'Z' in r["created_at"] else r["created_at"]
+        updated_at_str = r["updated_at"].replace('Z', '+00:00') if isinstance(r["updated_at"], str) and 'Z' in r["updated_at"] else r["updated_at"]
+        created_at = datetime.fromisoformat(created_at_str).astimezone(timezone.utc) if isinstance(created_at_str, str) else r["created_at"]
+        updated_at = datetime.fromisoformat(updated_at_str).astimezone(timezone.utc) if isinstance(updated_at_str, str) else r["updated_at"]
         
         return Record(
             id=r["id"],
