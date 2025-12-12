@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime, UTC
+from datetime import date, datetime, timezone
 from typing import List, Optional, Tuple
 
 from .database import db_cursor
@@ -61,7 +61,7 @@ class RecordRepository:
         category_id: Optional[int],
         note: str,
     ) -> Record:
-        now = datetime.now(UTC).isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         with db_cursor() as cur:
             cur.execute(
                 """
@@ -124,7 +124,7 @@ class RecordRepository:
             fields.append("note = ?")
             params.append(note)
         fields.append("updated_at = ?")
-        params.append(datetime.now(UTC).isoformat())
+        params.append(datetime.now(timezone.utc).isoformat())
         params.append(record_id)
         if not fields:
             return
